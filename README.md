@@ -1,36 +1,27 @@
 # Nirikshan - GRC Security Audit Platform
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Flask-2.3+-green.svg" alt="Flask">
-  <img src="https://img.shields.io/badge/Ansible-6.0+-red.svg" alt="Ansible">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
-</p>
-
-<p align="center">
-  <strong>A comprehensive Governance, Risk, and Compliance (GRC) security auditing platform for automated compliance checking against industry standards.</strong>
-</p>
+A comprehensive Governance, Risk, and Compliance (GRC) security auditing platform for automated compliance checking against industry standards.
 
 ---
 
-## 📋 Overview
+## Overview
 
-**Nirikshan** (निरीक्षण - meaning "inspection" in Nepali) is a web-based security audit platform designed to automate compliance assessments for IT infrastructure. It supports both live server audits via SSH and offline configuration file analysis.
+**Nirikshan** (meaning "inspection" in Nepali) is a web-based security audit platform designed to automate compliance assessments for IT infrastructure. It supports both live server audits via SSH and offline configuration file analysis.
 
 ### Key Features
 
-- 🔍 **Automated Compliance Auditing** - Run security audits against CIS Benchmarks, NRB IT Guidelines, and NTA Cyber Byelaw 2020
-- 🌐 **Online & Offline Audits** - Audit live servers via SSH or analyze uploaded configuration files
-- 🔥 **Firewall Auditing** - Unique OPNsense/pfSense firewall configuration auditing capability
-- 📊 **Professional Reports** - Generate detailed HTML and PDF compliance reports
-- 👥 **Multi-User Support** - Role-based access control (Administrator/Staff)
-- 📈 **Dashboard Analytics** - Visual KPIs and compliance statistics
-- 📝 **Activity Logging** - Complete audit trail of all user actions
-- 🔄 **Report Comparison** - Compare audit results over time to track compliance improvements
+- **Automated Compliance Auditing** - Run security audits against CIS Benchmarks, NRB IT Guidelines, and NTA Cyber Byelaw 2020
+- **Online & Offline Audits** - Audit live servers via SSH or analyze uploaded configuration files
+- **Firewall Auditing** - Unique OPNsense/pfSense firewall configuration auditing capability
+- **Professional Reports** - Generate detailed HTML and PDF compliance reports
+- **Multi-User Support** - Role-based access control (Administrator/Staff)
+- **Dashboard Analytics** - Visual KPIs and compliance statistics
+- **Activity Logging** - Complete audit trail of all user actions
+- **Report Comparison** - Compare audit results over time to track compliance improvements
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -67,7 +58,7 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -125,7 +116,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Nirikshan/
@@ -154,7 +145,7 @@ Nirikshan/
 
 ---
 
-## 🔒 Supported Compliance Frameworks
+## Supported Compliance Frameworks
 
 | Framework | Description | Check Count |
 |-----------|-------------|-------------|
@@ -167,7 +158,7 @@ Nirikshan/
 
 ---
 
-## 💻 Usage
+## Usage
 
 ### Running an Online Audit
 
@@ -193,7 +184,7 @@ Nirikshan/
 
 ---
 
-## 📊 Screenshots
+## Screenshots
 
 ### Dashboard
 The main dashboard displays active audits, compliance statistics, and quick actions.
@@ -206,7 +197,7 @@ Generate branded HTML/PDF reports suitable for stakeholder presentations.
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **Backend:** Python 3, Flask, Ansible Runner
 - **Database:** MySQL
@@ -217,7 +208,7 @@ Generate branded HTML/PDF reports suitable for stakeholder presentations.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Sarthak Bachhar**
 
@@ -225,13 +216,13 @@ Generate branded HTML/PDF reports suitable for stakeholder presentations.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - CIS (Center for Internet Security) for benchmark standards
 - Nepal Rastra Bank for IT Guidelines and Cyber Resilience framework
@@ -239,6 +230,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-<p align="center">
-  Made with ❤️ for Final Year Project
-</p>
+Made for Final Year Project
