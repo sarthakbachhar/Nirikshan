@@ -1,0 +1,29 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Data and logs (generated at runtime)
+data/
+logs/
+uploads/
+reports/
+server-configs/
+
+# Backup files
+*.backup
+*.bak
+*_backup.*
+
+# Test files
+test_*.py
+
+# Documentation (optional - keep if you want)
+# Shell scripts
+*.sh
+
+# Misc
+.DS_Store
+*.json
