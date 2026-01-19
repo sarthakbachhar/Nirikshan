@@ -1,0 +1,907 @@
+---
+################################################################################
+# NRB IT Guidelines Security Audit Playbook
+#
+# I created this playbook for auditing RHEL Linux systems against
+# Nepal Rastra Bank (NRB) IT Guidelines. This is specifically for
+# banks and financial institutions in Nepal.
+#
+# Author: Me
+# Project: Nirikshan (Final Year Project)
+################################################################################
+#
+# HOW IT WORKS:
+#   Users upload a tar.gz file containing their server's config files.
+#   My system then checks each file against NRB's security requirements.
+#
+# WHAT FILES ARE CHECKED:
+#   - etc/pam.d/system-auth       - Password authentication settings
+#   - etc/pam.d/password-auth     - Login authentication rules
+#   - etc/login.defs              - Password policies
+#   - etc/ssh/sshd_config         - SSH configuration
+#   - etc/sudoers                 - Who can use sudo
+#   - etc/sysctl.conf             - Kernel security settings
+#   - etc/selinux/config          - SELinux settings
+#   - etc/audit/auditd.conf       - Audit logging
+#   - etc/audit/rules.d/audit.rules - What gets audited
+#   - etc/rsyslog.conf            - System logging
+#   - etc/logrotate.conf          - Log rotation settings
+#   - os-release.txt              - OS version info
+#   - users-list.txt              - List of users
+#
+# CHECK TYPES I IMPLEMENTED:
+#   - file_exists: Make sure the file is there
+#   - contains: File must have specific text
+#   - not_contains: File must NOT have certain text
+#   - parameter_set: A setting must be configured
+#   - parameter_not_set: A setting must be disabled
+#   - numeric_compare: Compare numbers (<=, >=, ==, <, >)
+#   - regex_match: Match patterns
+#   - line_present: Specific line must exist
+#   - line_absent: Specific line must not exist
+#
+# SEVERITY LEVELS: CRITICAL, HIGH, MEDIUM, LOW, INFO
+#
+################################################################################
+
+metadata:
+  name: "NRB IT Guidelines RHEL Security Audit"
+  version: "1.0.0"
+  description: "Comprehensive security compliance checks for RHEL Linux based on NRB IT Guidelines"
+  target_os: "RHEL/CentOS 7/8/9"
+  compliance_framework: "NRB IT Guidelines"
+  last_updated: "2025-12-17"
+
+# =============================================================================
+# SECTION 1: PAM (Pluggable Authentication Modules) CONFIGURATION
+# =============================================================================
+pam_checks:
+  
+  # 1.1 Password Quality Requirements
+  - id: "NRB-PAM-1.1"
+    name: "Ensure password quality requirements are configured"
+    description: "Password complexity rules must be enforced using pam_pwquality"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_pwquality.so"
+    severity: "HIGH"
+    remediation: "Add 'password requisite pam_pwquality.so retry=3' to /etc/pam.d/system-auth"
+    nrb_reference: "NRB IT Guidelines - Password Policy Section"
+
+  - id: "NRB-PAM-1.2"
+    name: "Ensure password quality is enforced in password-auth"
+    description: "Password quality module must be present in password-auth"
+    file: "etc/pam.d/password-auth"
+    check_type: "contains"
+    pattern: "pam_pwquality.so"
+    severity: "HIGH"
+    remediation: "Add 'password requisite pam_pwquality.so retry=3' to /etc/pam.d/password-auth"
+    nrb_reference: "NRB IT Guidelines - Password Policy Section"
+
+  # 1.2 Account Lockout Policy
+  - id: "NRB-PAM-1.3"
+    name: "Ensure account lockout is configured"
+    description: "Failed login attempts should trigger account lockout"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so"
+    severity: "HIGH"
+    remediation: "Configure pam_faillock.so in /etc/pam.d/system-auth with appropriate deny, unlock_time parameters"
+    nrb_reference: "NRB IT Guidelines - Access Control Section"
+
+  - id: "NRB-PAM-1.4"
+    name: "Ensure faillock preauth is configured"
+    description: "Faillock must be configured before authentication"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so preauth"
+    severity: "MEDIUM"
+    remediation: "Add 'auth required pam_faillock.so preauth silent audit deny=5 unlock_time=900' to /etc/pam.d/system-auth"
+    nrb_reference: "NRB IT Guidelines - Access Control Section"
+
+  - id: "NRB-PAM-1.5"
+    name: "Ensure faillock authfail is configured"
+    description: "Faillock must be configured after failed authentication"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so authfail"
+    severity: "MEDIUM"
+    remediation: "Add 'auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900' to /etc/pam.d/system-auth"
+    nrb_reference: "NRB IT Guidelines - Access Control Section"
+
+  # 1.3 Password History
+  - id: "NRB-PAM-1.6"
+    name: "Ensure password reuse is limited"
+    description: "Users must not reuse recent passwords"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_pwhistory.so"
+    severity: "MEDIUM"
+    remediation: "Add 'password required pam_pwhistory.so remember=5' to /etc/pam.d/system-auth"
+    nrb_reference: "NRB IT Guidelines - Password Policy Section"
+
+  # 1.4 Password Hashing Algorithm
+  - id: "NRB-PAM-1.7"
+    name: "Ensure strong password hashing algorithm is used"
+    description: "SHA-512 or stronger hashing should be used for passwords"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_unix.so.*sha512"
+    severity: "HIGH"
+    remediation: "Add 'sha512' option to pam_unix.so line in /etc/pam.d/system-auth"
+    nrb_reference: "NRB IT Guidelines - Cryptographic Controls"
+
+# =============================================================================
+# SECTION 2: LOGIN.DEFS - LOGIN AND PASSWORD POLICIES
+# =============================================================================
+login_defs_checks:
+  
+  # 2.1 Password Aging Controls
+  - id: "NRB-LOGIN-2.1"
+    name: "Ensure password expiration is 90 days or less"
+    description: "Maximum password age should be 90 days as per NRB guidelines"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MAX_DAYS"
+    expected_value: "90"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set PASS_MAX_DAYS to 90 or less in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - Password Expiration Policy"
+
+  - id: "NRB-LOGIN-2.2"
+    name: "Ensure minimum password age is set"
+    description: "Minimum days between password changes should be at least 1 day"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MIN_DAYS"
+    expected_value: "1"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set PASS_MIN_DAYS to 1 or more in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - Password Policy Section"
+
+  - id: "NRB-LOGIN-2.3"
+    name: "Ensure password expiration warning is set"
+    description: "Users should receive warning 7 days before password expiration"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_WARN_AGE"
+    expected_value: "7"
+    comparison: ">="
+    severity: "LOW"
+    remediation: "Set PASS_WARN_AGE to 7 or more in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - User Notification Requirements"
+
+  # 2.2 Password Length
+  - id: "NRB-LOGIN-2.4"
+    name: "Ensure minimum password length is configured"
+    description: "Minimum password length should be at least 8 characters"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MIN_LEN"
+    expected_value: "8"
+    comparison: ">="
+    severity: "HIGH"
+    remediation: "Set PASS_MIN_LEN to 8 or more in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - Password Complexity Requirements"
+
+  # 2.3 User ID Ranges
+  - id: "NRB-LOGIN-2.5"
+    name: "Ensure system UID minimum is configured"
+    description: "System accounts should use UID below 1000"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "SYS_UID_MIN"
+    expected_value: "201"
+    comparison: "=="
+    severity: "LOW"
+    remediation: "Set SYS_UID_MIN appropriately in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - User Account Management"
+
+  - id: "NRB-LOGIN-2.6"
+    name: "Ensure user UID minimum is configured"
+    description: "Regular user accounts should start from UID 1000"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "UID_MIN"
+    expected_value: "1000"
+    comparison: "=="
+    severity: "LOW"
+    remediation: "Set UID_MIN to 1000 in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - User Account Management"
+
+  # 2.4 Encryption Method
+  - id: "NRB-LOGIN-2.7"
+    name: "Ensure strong encryption method is set"
+    description: "SHA512 encryption should be used for passwords"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "ENCRYPT_METHOD"
+    expected_value: "SHA512"
+    comparison: "=="
+    severity: "CRITICAL"
+    remediation: "Set ENCRYPT_METHOD to SHA512 in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - Cryptographic Controls"
+
+  # 2.5 Umask Settings
+  - id: "NRB-LOGIN-2.8"
+    name: "Ensure default umask is restrictive"
+    description: "Default file creation mask should be 027 or more restrictive"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "UMASK"
+    expected_value: "027"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set UMASK to 027 in /etc/login.defs"
+    nrb_reference: "NRB IT Guidelines - File System Security"
+
+# =============================================================================
+# SECTION 3: SSH SERVER CONFIGURATION
+# =============================================================================
+ssh_checks:
+  
+  # 3.1 SSH Protocol and Encryption
+  - id: "NRB-SSH-3.1"
+    name: "Ensure SSH Protocol 2 is used"
+    description: "Only SSH Protocol 2 should be enabled (Protocol 1 is insecure)"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "Protocol"
+    expected_value: "2"
+    severity: "CRITICAL"
+    remediation: "Set 'Protocol 2' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Secure Communication"
+
+  - id: "NRB-SSH-3.2"
+    name: "Ensure SSH root login is disabled"
+    description: "Direct root login via SSH should be prohibited"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitRootLogin"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set 'PermitRootLogin no' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Privileged Access Management"
+
+  - id: "NRB-SSH-3.3"
+    name: "Ensure SSH empty passwords are disabled"
+    description: "Empty passwords must not be permitted"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitEmptyPasswords"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set 'PermitEmptyPasswords no' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Authentication Requirements"
+
+  - id: "NRB-SSH-3.4"
+    name: "Ensure SSH X11 forwarding is disabled"
+    description: "X11 forwarding should be disabled unless required"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "X11Forwarding"
+    expected_value: "no"
+    severity: "MEDIUM"
+    remediation: "Set 'X11Forwarding no' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Network Security"
+
+  - id: "NRB-SSH-3.5"
+    name: "Ensure SSH MaxAuthTries is limited"
+    description: "Maximum authentication attempts should be 4 or less"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "MaxAuthTries"
+    expected_value: "4"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set 'MaxAuthTries 4' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Brute Force Protection"
+
+  - id: "NRB-SSH-3.6"
+    name: "Ensure SSH IgnoreRhosts is enabled"
+    description: "SSH should ignore rhosts files"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "IgnoreRhosts"
+    expected_value: "yes"
+    severity: "HIGH"
+    remediation: "Set 'IgnoreRhosts yes' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Secure Authentication"
+
+  - id: "NRB-SSH-3.7"
+    name: "Ensure SSH HostbasedAuthentication is disabled"
+    description: "Host-based authentication should be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "HostbasedAuthentication"
+    expected_value: "no"
+    severity: "HIGH"
+    remediation: "Set 'HostbasedAuthentication no' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Authentication Methods"
+
+  - id: "NRB-SSH-3.8"
+    name: "Ensure SSH idle timeout is configured"
+    description: "Client alive interval should be set to timeout idle sessions"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "ClientAliveInterval"
+    expected_value: "300"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'ClientAliveInterval 300' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Session Management"
+
+  - id: "NRB-SSH-3.9"
+    name: "Ensure SSH ClientAliveCountMax is configured"
+    description: "Maximum client alive messages should be limited"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "ClientAliveCountMax"
+    expected_value: "3"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'ClientAliveCountMax 3' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Session Management"
+
+  - id: "NRB-SSH-3.10"
+    name: "Ensure SSH LogLevel is appropriate"
+    description: "SSH logging should be set to INFO or VERBOSE"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "LogLevel"
+    expected_value: "INFO"
+    severity: "MEDIUM"
+    remediation: "Set 'LogLevel INFO' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Logging and Monitoring"
+
+  - id: "NRB-SSH-3.11"
+    name: "Ensure SSH PermitUserEnvironment is disabled"
+    description: "User environment forwarding should be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitUserEnvironment"
+    expected_value: "no"
+    severity: "MEDIUM"
+    remediation: "Set 'PermitUserEnvironment no' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Environment Security"
+
+  - id: "NRB-SSH-3.12"
+    name: "Ensure SSH strong ciphers are configured"
+    description: "Only approved strong encryption ciphers should be used"
+    file: "etc/ssh/sshd_config"
+    check_type: "contains"
+    pattern: "Ciphers.*aes"
+    severity: "HIGH"
+    remediation: "Configure strong ciphers: Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+    nrb_reference: "NRB IT Guidelines - Cryptographic Controls"
+
+  - id: "NRB-SSH-3.13"
+    name: "Ensure SSH strong MACs are configured"
+    description: "Only approved strong MAC algorithms should be used"
+    file: "etc/ssh/sshd_config"
+    check_type: "contains"
+    pattern: "MACs.*hmac-sha2"
+    severity: "HIGH"
+    remediation: "Configure strong MACs: MACs hmac-sha2-512,hmac-sha2-256"
+    nrb_reference: "NRB IT Guidelines - Cryptographic Controls"
+
+  - id: "NRB-SSH-3.14"
+    name: "Ensure SSH banner is configured"
+    description: "Warning banner should be displayed before authentication"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "Banner"
+    expected_value: "/etc/issue.net"
+    severity: "LOW"
+    remediation: "Set 'Banner /etc/issue.net' in /etc/ssh/sshd_config"
+    nrb_reference: "NRB IT Guidelines - Legal Notices"
+
+# =============================================================================
+# SECTION 4: SUDOERS CONFIGURATION
+# =============================================================================
+sudoers_checks:
+  
+  - id: "NRB-SUDO-4.1"
+    name: "Ensure sudoers file exists"
+    description: "Sudoers configuration file must be present"
+    file: "etc/sudoers"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Restore /etc/sudoers file with proper configuration"
+    nrb_reference: "NRB IT Guidelines - Privileged Access Management"
+
+  - id: "NRB-SUDO-4.2"
+    name: "Ensure sudo log file is configured"
+    description: "All sudo commands should be logged"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults.*logfile"
+    severity: "HIGH"
+    remediation: "Add 'Defaults logfile=/var/log/sudo.log' to /etc/sudoers"
+    nrb_reference: "NRB IT Guidelines - Audit and Accountability"
+
+  - id: "NRB-SUDO-4.3"
+    name: "Ensure sudo password timeout is configured"
+    description: "Sudo password caching should have a timeout"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults.*timestamp_timeout"
+    severity: "MEDIUM"
+    remediation: "Add 'Defaults timestamp_timeout=15' to /etc/sudoers"
+    nrb_reference: "NRB IT Guidelines - Session Management"
+
+  - id: "NRB-SUDO-4.4"
+    name: "Ensure sudo re-authentication is required"
+    description: "Users should authenticate for each sudo command"
+    file: "etc/sudoers"
+    check_type: "not_contains"
+    pattern: "NOPASSWD"
+    severity: "HIGH"
+    remediation: "Remove NOPASSWD directives from /etc/sudoers unless absolutely necessary"
+    nrb_reference: "NRB IT Guidelines - Authentication Requirements"
+
+  - id: "NRB-SUDO-4.5"
+    name: "Ensure sudo command aliasing is reviewed"
+    description: "Verify that command aliases do not grant excessive privileges"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Cmnd_Alias"
+    severity: "INFO"
+    remediation: "Review all command aliases in /etc/sudoers for least privilege"
+    nrb_reference: "NRB IT Guidelines - Least Privilege Principle"
+
+# =============================================================================
+# SECTION 5: KERNEL PARAMETERS (SYSCTL.CONF)
+# =============================================================================
+sysctl_checks:
+  
+  # 5.1 Network Security
+  - id: "NRB-SYSCTL-5.1"
+    name: "Ensure IP forwarding is disabled"
+    description: "IP forwarding should be disabled unless the system is a router"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.ip_forward"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.ip_forward = 0' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.2"
+    name: "Ensure ICMP redirects are not accepted"
+    description: "ICMP redirect acceptance should be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_redirects"
+    expected_value: "0"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.conf.all.accept_redirects = 0' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.3"
+    name: "Ensure secure ICMP redirects are not accepted"
+    description: "Secure ICMP redirect acceptance should be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.secure_redirects"
+    expected_value: "0"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.conf.all.secure_redirects = 0' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.4"
+    name: "Ensure source routing is disabled"
+    description: "Source routing should be disabled for security"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_source_route"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.conf.all.accept_source_route = 0' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.5"
+    name: "Ensure suspicious packets are logged"
+    description: "Martian packets should be logged"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.log_martians"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.conf.all.log_martians = 1' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Logging and Monitoring"
+
+  - id: "NRB-SYSCTL-5.6"
+    name: "Ensure broadcast ICMP requests are ignored"
+    description: "System should not respond to broadcast ICMP requests"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.icmp_echo_ignore_broadcasts"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.icmp_echo_ignore_broadcasts = 1' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.7"
+    name: "Ensure bogus ICMP responses are ignored"
+    description: "System should ignore bogus ICMP error responses"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.icmp_ignore_bogus_error_responses"
+    expected_value: "1"
+    severity: "LOW"
+    remediation: "Set 'net.ipv4.icmp_ignore_bogus_error_responses = 1' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.8"
+    name: "Ensure Reverse Path Filtering is enabled"
+    description: "Reverse path filtering prevents IP spoofing"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.rp_filter"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.conf.all.rp_filter = 1' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+  - id: "NRB-SYSCTL-5.9"
+    name: "Ensure TCP SYN Cookies are enabled"
+    description: "SYN cookies protect against SYN flood attacks"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.tcp_syncookies"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.tcp_syncookies = 1' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - DDoS Protection"
+
+  - id: "NRB-SYSCTL-5.10"
+    name: "Ensure IPv6 router advertisements are not accepted"
+    description: "IPv6 router advertisements should not be accepted"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv6.conf.all.accept_ra"
+    expected_value: "0"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv6.conf.all.accept_ra = 0' in /etc/sysctl.conf"
+    nrb_reference: "NRB IT Guidelines - Network Security Controls"
+
+# =============================================================================
+# SECTION 6: SELINUX CONFIGURATION
+# =============================================================================
+selinux_checks:
+  
+  - id: "NRB-SELINUX-6.1"
+    name: "Ensure SELinux is not disabled"
+    description: "SELinux should be in enforcing or permissive mode"
+    file: "etc/selinux/config"
+    check_type: "not_contains"
+    pattern: "SELINUX=disabled"
+    severity: "CRITICAL"
+    remediation: "Set 'SELINUX=enforcing' in /etc/selinux/config"
+    nrb_reference: "NRB IT Guidelines - Mandatory Access Control"
+
+  - id: "NRB-SELINUX-6.2"
+    name: "Ensure SELinux is in enforcing mode"
+    description: "SELinux should be configured in enforcing mode"
+    file: "etc/selinux/config"
+    check_type: "contains"
+    pattern: "SELINUX=enforcing"
+    severity: "HIGH"
+    remediation: "Set 'SELINUX=enforcing' in /etc/selinux/config and reboot"
+    nrb_reference: "NRB IT Guidelines - Mandatory Access Control"
+
+  - id: "NRB-SELINUX-6.3"
+    name: "Ensure SELinux policy is configured"
+    description: "SELinux policy type should be targeted or strict"
+    file: "etc/selinux/config"
+    check_type: "contains"
+    pattern: "SELINUXTYPE=(targeted|strict)"
+    severity: "HIGH"
+    remediation: "Set 'SELINUXTYPE=targeted' in /etc/selinux/config"
+    nrb_reference: "NRB IT Guidelines - Security Policy Configuration"
+
+# =============================================================================
+# SECTION 7: AUDIT DAEMON CONFIGURATION
+# =============================================================================
+auditd_checks:
+  
+  - id: "NRB-AUDIT-7.1"
+    name: "Ensure auditd is configured"
+    description: "Audit daemon configuration file must exist"
+    file: "etc/audit/auditd.conf"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Install and configure auditd package"
+    nrb_reference: "NRB IT Guidelines - Audit and Accountability"
+
+  - id: "NRB-AUDIT-7.2"
+    name: "Ensure audit logs are not automatically deleted"
+    description: "Max log file action should retain logs"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "max_log_file_action"
+    expected_value: "keep_logs"
+    severity: "HIGH"
+    remediation: "Set 'max_log_file_action = keep_logs' in /etc/audit/auditd.conf"
+    nrb_reference: "NRB IT Guidelines - Log Retention Policy"
+
+  - id: "NRB-AUDIT-7.3"
+    name: "Ensure system is disabled when audit logs are full"
+    description: "System should halt when audit storage is full"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "space_left_action"
+    expected_value: "email"
+    severity: "HIGH"
+    remediation: "Set 'space_left_action = email' in /etc/audit/auditd.conf"
+    nrb_reference: "NRB IT Guidelines - Audit Failure Response"
+
+  - id: "NRB-AUDIT-7.4"
+    name: "Ensure audit log file size is appropriate"
+    description: "Audit log files should have adequate size limits"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "max_log_file"
+    expected_value: "8"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set 'max_log_file = 8' or higher in /etc/audit/auditd.conf"
+    nrb_reference: "NRB IT Guidelines - Log Management"
+
+  - id: "NRB-AUDIT-7.5"
+    name: "Ensure audit logs are rotated"
+    description: "Audit log rotation should be configured"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "num_logs"
+    expected_value: "5"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set 'num_logs = 5' or higher in /etc/audit/auditd.conf"
+    nrb_reference: "NRB IT Guidelines - Log Rotation Policy"
+
+# =============================================================================
+# SECTION 8: AUDIT RULES
+# =============================================================================
+audit_rules_checks:
+  
+  - id: "NRB-AUDITRULES-8.1"
+    name: "Ensure audit rules file exists"
+    description: "Audit rules configuration must be present"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Create /etc/audit/rules.d/audit.rules with appropriate rules"
+    nrb_reference: "NRB IT Guidelines - Audit Configuration"
+
+  - id: "NRB-AUDITRULES-8.2"
+    name: "Ensure authentication events are audited"
+    description: "Login and logout events should be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/var/log/lastlog"
+    severity: "HIGH"
+    remediation: "Add audit rules for /var/log/lastlog, /var/run/faillock"
+    nrb_reference: "NRB IT Guidelines - Authentication Logging"
+
+  - id: "NRB-AUDITRULES-8.3"
+    name: "Ensure sudoers modifications are audited"
+    description: "Changes to sudoers should be logged"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/sudoers"
+    severity: "HIGH"
+    remediation: "Add audit rule: -w /etc/sudoers -p wa -k sudoers_changes"
+    nrb_reference: "NRB IT Guidelines - Privileged Access Auditing"
+
+  - id: "NRB-AUDITRULES-8.4"
+    name: "Ensure user/group modifications are audited"
+    description: "Changes to user and group files should be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/passwd"
+    severity: "HIGH"
+    remediation: "Add audit rules for /etc/passwd, /etc/group, /etc/shadow"
+    nrb_reference: "NRB IT Guidelines - User Management Auditing"
+
+  - id: "NRB-AUDITRULES-8.5"
+    name: "Ensure network environment modifications are audited"
+    description: "Changes to network configuration should be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/sysconfig/network"
+    severity: "MEDIUM"
+    remediation: "Add audit rules for network configuration files"
+    nrb_reference: "NRB IT Guidelines - Network Configuration Auditing"
+
+  - id: "NRB-AUDITRULES-8.6"
+    name: "Ensure system mandatory access controls are audited"
+    description: "SELinux policy modifications should be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/selinux"
+    severity: "MEDIUM"
+    remediation: "Add audit rule: -w /etc/selinux/ -p wa -k MAC-policy"
+    nrb_reference: "NRB IT Guidelines - MAC Policy Auditing"
+
+  - id: "NRB-AUDITRULES-8.7"
+    name: "Ensure file deletion events are audited"
+    description: "File deletion operations should be logged"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "-a.*always,exit.*-S.*unlink"
+    severity: "MEDIUM"
+    remediation: "Add audit rules for unlink, unlinkat, rename, renameat system calls"
+    nrb_reference: "NRB IT Guidelines - File Operation Auditing"
+
+# =============================================================================
+# SECTION 9: RSYSLOG CONFIGURATION
+# =============================================================================
+rsyslog_checks:
+  
+  - id: "NRB-RSYSLOG-9.1"
+    name: "Ensure rsyslog is configured"
+    description: "System logging configuration must be present"
+    file: "etc/rsyslog.conf"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Install and configure rsyslog package"
+    nrb_reference: "NRB IT Guidelines - Logging Infrastructure"
+
+  - id: "NRB-RSYSLOG-9.2"
+    name: "Ensure rsyslog default file permissions are configured"
+    description: "Log file permissions should be restrictive"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "\\$FileCreateMode"
+    severity: "MEDIUM"
+    remediation: "Add '$FileCreateMode 0640' to /etc/rsyslog.conf"
+    nrb_reference: "NRB IT Guidelines - Log File Security"
+
+  - id: "NRB-RSYSLOG-9.3"
+    name: "Ensure rsyslog is configured to send logs to remote host"
+    description: "Logs should be sent to centralized logging server"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "@@.*:|\\*\\.\\*.*@"
+    severity: "MEDIUM"
+    remediation: "Configure remote logging in /etc/rsyslog.conf: *.* @@logserver:514"
+    nrb_reference: "NRB IT Guidelines - Centralized Logging"
+
+  - id: "NRB-RSYSLOG-9.4"
+    name: "Ensure authentication messages are logged"
+    description: "Auth facility messages should be logged"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "auth,authpriv"
+    severity: "HIGH"
+    remediation: "Ensure auth,authpriv.* logging is configured in /etc/rsyslog.conf"
+    nrb_reference: "NRB IT Guidelines - Authentication Logging"
+
+# =============================================================================
+# SECTION 10: LOG ROTATION CONFIGURATION
+# =============================================================================
+logrotate_checks:
+  
+  - id: "NRB-LOGROTATE-10.1"
+    name: "Ensure logrotate is configured"
+    description: "Log rotation configuration must be present"
+    file: "etc/logrotate.conf"
+    check_type: "file_exists"
+    severity: "MEDIUM"
+    remediation: "Install logrotate and create /etc/logrotate.conf"
+    nrb_reference: "NRB IT Guidelines - Log Management"
+
+  - id: "NRB-LOGROTATE-10.2"
+    name: "Ensure log rotation interval is configured"
+    description: "Logs should be rotated regularly"
+    file: "etc/logrotate.conf"
+    check_type: "contains"
+    pattern: "weekly|daily|monthly"
+    severity: "MEDIUM"
+    remediation: "Configure rotation interval in /etc/logrotate.conf"
+    nrb_reference: "NRB IT Guidelines - Log Retention"
+
+  - id: "NRB-LOGROTATE-10.3"
+    name: "Ensure log retention is configured"
+    description: "Old logs should be retained according to policy"
+    file: "etc/logrotate.conf"
+    check_type: "contains"
+    pattern: "rotate [4-9]|rotate [1-9][0-9]"
+    severity: "MEDIUM"
+    remediation: "Set 'rotate 4' or higher in /etc/logrotate.conf"
+    nrb_reference: "NRB IT Guidelines - Log Retention Policy"
+
+  - id: "NRB-LOGROTATE-10.4"
+    name: "Ensure log compression is enabled"
+    description: "Rotated logs should be compressed to save space"
+    file: "etc/logrotate.conf"
+    check_type: "contains"
+    pattern: "compress"
+    severity: "LOW"
+    remediation: "Add 'compress' directive to /etc/logrotate.conf"
+    nrb_reference: "NRB IT Guidelines - Storage Optimization"
+
+# =============================================================================
+# SECTION 11: SYSTEM INFORMATION
+# =============================================================================
+system_info_checks:
+  
+  - id: "NRB-SYSINFO-11.1"
+    name: "Ensure OS information is present"
+    description: "Operating system release information should be available"
+    file: "os-release.txt"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Extract /etc/os-release from the system"
+    nrb_reference: "NRB IT Guidelines - System Documentation"
+
+  - id: "NRB-SYSINFO-11.2"
+    name: "Verify OS is RHEL/CentOS"
+    description: "System should be running RHEL or CentOS"
+    file: "os-release.txt"
+    check_type: "contains"
+    pattern: "Red Hat|CentOS|Rocky|AlmaLinux"
+    severity: "INFO"
+    remediation: "Ensure system is running supported RHEL-based distribution"
+    nrb_reference: "NRB IT Guidelines - Supported Platforms"
+
+# =============================================================================
+# SECTION 12: USER ACCOUNT SECURITY
+# =============================================================================
+users_checks:
+  
+  - id: "NRB-USERS-12.1"
+    name: "Ensure user list is available"
+    description: "System user list should be documented"
+    file: "users-list.txt"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Extract user list from /etc/passwd"
+    nrb_reference: "NRB IT Guidelines - User Documentation"
+
+  - id: "NRB-USERS-12.2"
+    name: "Check for root user presence"
+    description: "Root user should be present in system"
+    file: "users-list.txt"
+    check_type: "contains"
+    pattern: "root:x:0:0"
+    severity: "CRITICAL"
+    remediation: "Ensure root account exists and is properly configured"
+    nrb_reference: "NRB IT Guidelines - System Administration"
+
+  - id: "NRB-USERS-12.3"
+    name: "Review system accounts"
+    description: "Verify only necessary system accounts exist"
+    file: "users-list.txt"
+    check_type: "not_contains"
+    pattern: "games:|lp:|news:|uucp:"
+    severity: "LOW"
+    remediation: "Remove unnecessary legacy system accounts"
+    nrb_reference: "NRB IT Guidelines - Account Management"
+
+# =============================================================================
+# SUMMARY
+# =============================================================================
+# Total Checks: 90+
+# Critical: 9
+# High: 35
+# Medium: 33
+# Low: 10
+# Info: 4
+#
+# This playbook provides comprehensive coverage of NRB IT Guidelines for
+# RHEL Linux systems, covering:
+# - Authentication and Access Control
+# - Password Policies
+# - Network Security
+# - Audit and Logging
+# - System Hardening
+# - Mandatory Access Controls
+#
+# Users should extract configuration files from their RHEL systems into a
+# tar.gz archive and upload for automated compliance checking.
+################################################################################

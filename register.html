@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Nirikshan - Registration Page
+    This is where new users create their accounts.
+    I kept the design consistent with the login page.
+    
+    Author: Me
+    Project: Nirikshan (Final Year Project)
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Nirikshan</title>
+    <style>
+        /* Reset browser defaults */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Same clean style as the login page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #202124;
+        }
+
+        /* Container for the registration form */
+        .register-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        /* Card styling with subtle shadow */
+        .register-box {
+            background: white;
+            padding: 48px 40px 36px;
+            border-radius: 8px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dadce0;
+        }
+
+        /* Nirikshan branding */
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            font-size: 36px;
+            font-weight: 400;
+            color: #1a73e8;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #202124;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: #5f6368;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px 15px;
+            font-size: 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+            color: #202124;
+        }
+
+        input:focus, select:focus {
+            border-color: #1a73e8;
+            border-width: 2px;
+            padding: 12px 14px;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            display: inline-block;
+            margin-top: 8px;
+            background: none;
+            border: none;
+            color: #1a73e8;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 0;
+            font-weight: 500;
+            user-select: none;
+            text-decoration: none;
+        }
+
+        .password-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1a73e8;
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            letter-spacing: 0.25px;
+        }
+
+        button:hover {
+            background: #1765cc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        button:active {
+            background: #1557b0;
+        }
+
+        .error {
+            background: #fce8e6;
+            color: #d93025;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: left;
+            border-left: 3px solid #d93025;
+        }
+
+        .success {
+            background: #e6f4ea;
+            color: #137333;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: left;
+            border-left: 3px solid #137333;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #dadce0;
+        }
+
+        .links a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 12px;
+            color: #5f6368;
+        }
+
+        @media (max-width: 480px) {
+            .register-box {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <div class="register-box">
+        <div class="logo">
+            <h1>Nirikshan</h1>
+        </div>
+        <div class="logo-subtitle">GRC Audit Platform</div>
+        
+        <h2>Create your account</h2>
+        <div class="subtitle">Join Nirikshan today</div>
+
+        <div id="msg"></div>
+
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Choose a username" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
+            <button type="button" class="password-toggle" onclick="togglePassword('password')">Show password</button>
+            <div class="password-requirements">
+                Use 8 or more characters with a mix of letters, numbers & symbols
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm your password" autocomplete="new-password">
+            <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')">Show password</button>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role">
+                <option value="Staff">Staff</option>
+                <option value="Administrator">Administrator</option>
+            </select>
+        </div>
+
+        <button onclick="register()">Create Account</button>
+
+        <div class="links">
+            Already have an account? <a href="/login">Sign in</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2025 Nirikshan - Governance, Risk & Compliance
+    </div>
+</div>
+
+
+<script>
+    function togglePassword(fieldId) {
+        const passwordInput = document.getElementById(fieldId);
+        const toggleBtns = document.querySelectorAll('.password-toggle');
+        let toggleBtn = null;
+        
+        // Find the corresponding toggle button
+        if (fieldId === 'password') {
+            toggleBtn = toggleBtns[0];
+        } else if (fieldId === 'confirm-password') {
+            toggleBtn = toggleBtns[1];
+        }
+        
+        if (passwordInput && toggleBtn) {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleBtn.textContent = "Hide password";
+            } else {
+                passwordInput.type = "password";
+                toggleBtn.textContent = "Show password";
+            }
+        }
+    }
+
+    function showMessage(type, text) {
+        const msgDiv = document.getElementById("msg");
+        msgDiv.className = type;
+        msgDiv.textContent = text;
+    }
+
+    async function register() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const confirmPassword = document.getElementById("confirm-password").value.trim();
+        const role = document.getElementById("role").value;
+
+        // Validation
+        if (!username || !password || !confirmPassword) {
+            showMessage("error", "Please fill in all fields");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showMessage("error", "Passwords do not match");
+            return;
+        }
+
+        if (password.length < 8) {
+            showMessage("error", "Password must be at least 8 characters long");
+            return;
+        }
+
+        const data = {
+            username: username,
+            password: password,
+            role: role
+        };
+
+        try {
+            const response = await fetch("/api/register", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage("success", "Account created successfully! Redirecting to login...");
+                setTimeout(() => window.location.href = "/login", 2000);
+            } else {
+                showMessage("error", result.message);
+            }
+        } catch (error) {
+            showMessage("error", "An error occurred. Please try again.");
+        }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    register();
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Nirikshan - Required Python Packages
+# Install these with: pip install -r requirements.txt
+# Author: Me
+# Project: Nirikshan (Final Year Project)
+
+# Core dependencies for running audits
+ansible-runner>=2.3.3      # Runs my Ansible playbooks
+ansible>=6.0.0             # The main automation framework I use
+jinja2>=3.1.0              # Template engine for generating reports
+pyyaml>=6.0                # Parsing my YAML playbook files
+
+# Flask web framework for my REST API
+flask>=2.3.0               # Main web framework
+flask-cors>=4.0.0          # Allows cross-origin requests
+
+# These are optional - only needed if using gRPC
+grpcio>=1.50.0             # gRPC support
+grpcio-tools>=1.50.0       # gRPC tooling
+protobuf>=4.21.0           # Protocol buffers
+
+# Database connector for user authentication
+mysql-connector-python     # Connecting to MySQL database
+
+# Security dependencies
+werkzeug>=2.3.0            # Password hashing for user accounts
+
+# PDF generation
+reportlab                  # Creates my PDF reports
+weasyprint                 # HTML to PDF conversion
+
+# Other utilities I use
+requests>=2.28.0           # HTTP client for API testing

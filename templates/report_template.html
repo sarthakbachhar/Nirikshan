@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Nirikshan - Audit Report Template (Online Audits)
+    
+    This is my Jinja2 template for generating professional audit reports.
+    The report shows all the compliance checks with their pass/fail status
+    and includes remediation guidance for any failed checks.
+    
+    Author: Me
+    Project: Nirikshan (Final Year Project)
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nirikshan Security Audit Report - {{ target_ip }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {# Note: This is a Jinja2 template file #}
+    <style>
+        /* Reset styles for consistent rendering */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Main page styling with my purple gradient background */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+        }
+
+        /* Print-specific styles so reports look good when printed */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .no-print, .toolbar {
+                display: none !important;
+            }
+            .report-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        /* Toolbar with print and download buttons */
+        .toolbar {
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .toolbar-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .toolbar-btn i {
+            font-size: 16px;
+        }
+
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Professional Header */
+        .report-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .brand-logo {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-info h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 5px;
+        }
+
+        .brand-tagline {
+            font-size: 14px;
+            opacity: 0.95;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .report-meta {
+            margin-top: 25px;
+        }
+
+        .report-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .compliance-badge {
+            position: absolute;
+            top: 60px;
+            right: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 28px 40px;
+            border-radius: 18px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .compliance-percentage {
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .compliance-label {
+            font-size: 13px;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Document Information */
+        .document-info {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 40px 50px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        /* Executive Summary */
+        .executive-summary {
+            padding: 50px;
+            background: white;
+        }
+
+        .section-title {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 25px;
+            font-weight: 800;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+        }
+
+        .summary-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-card.total { border-left-color: #6b7280; }
+        .metric-card.passed { border-left-color: #38a169; }
+        .metric-card.failed { border-left-color: #e53e3e; }
+        .metric-card.skipped { border-left-color: #d69e2e; }
+
+        .metric-number {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .metric-card.total .metric-number { color: #6b7280; }
+        .metric-card.passed .metric-number { color: #38a169; }
+        .metric-card.failed .metric-number { color: #e53e3e; }
+        .metric-card.skipped .metric-number { color: #d69e2e; }
+
+        .metric-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* Compliance Progress */
+        .compliance-section {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 35px;
+            border-radius: 16px;
+            margin-top: 30px;
+        }
+
+        .compliance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .compliance-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .compliance-percent {
+            font-size: 32px;
+            font-weight: 900;
+            color: #667eea;
+        }
+
+        .compliance-bar {
+            background: #e2e8f0;
+            height: 32px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .compliance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: 800;
+            font-size: 14px;
+            transition: width 1s ease;
+        }
+
+        /* Detailed Results */
+        .results-section {
+            padding: 50px;
+            background: white;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-top: 20px;
+        }
+
+        .results-table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .results-table thead th:first-child {
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+
+        .results-table thead th:last-child {
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        .results-table tbody tr {
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .results-table tbody tr:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-table tbody td {
+            padding: 20px 15px;
+            border-top: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .results-table tbody td:first-child {
+            border-left: 1px solid #f3f4f6;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .results-table tbody td:last-child {
+            border-right: 1px solid #f3f4f6;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-passed {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-skipped {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .check-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .remediation {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 8px;
+            padding: 12px;
+            background: #f9fafb;
+            border-left: 3px solid #e53e3e;
+            border-radius: 6px;
+        }
+
+        /* Footer */
+        .report-footer {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            padding: 30px 50px;
+            text-align: center;
+        }
+
+        .footer-content {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        /* Print Styles */
+        @media print {
+            .report-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .compliance-badge {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar for download and print -->
+    <div class="toolbar no-print">
+        <button class="toolbar-btn" onclick="downloadHTML()">
+            <i class="fas fa-download"></i>
+            Download HTML
+        </button>
+        <button class="toolbar-btn" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            Print / Save PDF
+        </button>
+    </div>
+
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="header-content">
+                <div class="brand-section">
+                    <div class="brand-logo">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="brand-info">
+                        <h1>Nirikshan</h1>
+                        <div class="brand-tagline">GRC Audit Platform - Security Assessment Report</div>
+                    </div>
+                </div>
+
+                <div class="report-meta">
+                    <div class="report-title">Security Compliance Audit Report</div>
+                    <div class="report-subtitle">Comprehensive Security Assessment & Compliance Analysis</div>
+                </div>
+
+                <div class="compliance-badge">
+                    <div class="compliance-percentage">{{ compliance_percentage }}%</div>
+                    <div class="compliance-label">Compliance Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Information -->
+        <div class="document-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-server"></i> Target System
+                    </div>
+                    <div class="info-value">{{ target_ip }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-desktop"></i> Operating System
+                    </div>
+                    <div class="info-value">{{ os_type }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-layer-group"></i> Audit Level
+                    </div>
+                    <div class="info-value">{{ audit_level }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt"></i> Scan Date
+                    </div>
+                    <div class="info-value">{{ scan_date }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-clock"></i> Scan Time
+                    </div>
+                    <div class="info-value">{{ scan_time }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-hourglass-half"></i> Duration
+                    </div>
+                    <div class="info-value">{{ duration }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+
+            <div class="summary-metrics">
+                <div class="metric-card total">
+                    <div class="metric-number">{{ total_checks }}</div>
+                    <div class="metric-label">Total Checks</div>
+                </div>
+                <div class="metric-card passed">
+                    <div class="metric-number">{{ passed_checks }}</div>
+                    <div class="metric-label">Passed</div>
+                </div>
+                <div class="metric-card failed">
+                    <div class="metric-number">{{ failed_checks }}</div>
+                    <div class="metric-label">Failed</div>
+                </div>
+                <div class="metric-card skipped">
+                    <div class="metric-number">{{ skipped_checks }}</div>
+                    <div class="metric-label">Skipped</div>
+                </div>
+            </div>
+
+            <div class="compliance-section">
+                <div class="compliance-header">
+                    <div class="compliance-text">Overall Compliance</div>
+                    <div class="compliance-percent">{{ compliance_percentage }}%</div>
+                </div>
+                <div class="compliance-bar">
+                    <div class="compliance-fill" data-width="{{ compliance_percentage }}" style="width: {{ compliance_percentage }}%">
+                        {{ compliance_percentage }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results -->
+        <div class="results-section">
+            <h2 class="section-title">Detailed Audit Results</h2>
+
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 50%;">Security Check</th>
+                        <th style="width: 15%; text-align: center;">Status</th>
+                        <th style="width: 30%;">Remediation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td style="text-align: center; font-weight: 700; color: #6b7280;">{{ loop.index }}</td>
+                        <td>
+                            <div class="check-name">{{ result.check }}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            {% if 'PASSED' in result.status %}
+                            <span class="status-badge status-passed">
+                                <i class="fas fa-check-circle"></i> Passed
+                            </span>
+                            {% elif 'FAILED' in result.status %}
+                            <span class="status-badge status-failed">
+                                <i class="fas fa-times-circle"></i> Failed
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-skipped">
+                                <i class="fas fa-minus-circle"></i> Skipped
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if result.remediation %}
+                            <div class="remediation">
+                                <i class="fas fa-tools"></i> {{ result.remediation }}
+                            </div>
+                            {% else %}
+                            <span style="color: #9ca3af;">No action required</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="report-footer">
+            <div class="footer-brand">
+                <i class="fas fa-shield-alt"></i> Nirikshan - GRC Audit Platform
+            </div>
+            <div class="footer-content">
+                Generated on {{ scan_date }} at {{ scan_time }} | Audit ID: {{ audit_id }}<br>
+                This report is confidential and intended for authorized personnel only.<br>
+                © 2025 Nirikshan. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set compliance bar width dynamically to avoid CSS linter issues
+        document.addEventListener('DOMContentLoaded', function() {
+            var complianceFill = document.querySelector('.compliance-fill');
+            if (complianceFill) {
+                var width = complianceFill.getAttribute('data-width');
+                if (width) {
+                    complianceFill.style.width = width + '%';
+                }
+            }
+        });
+
+        // Download HTML report
+        function downloadHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nirikshan_report_{{ target_ip }}_{{ scan_date }}_{{ scan_time }}.html'.replace(/:/g, '-').replace(/\s/g, '_');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
+

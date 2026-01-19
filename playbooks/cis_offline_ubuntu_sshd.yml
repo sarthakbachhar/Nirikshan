@@ -1,0 +1,216 @@
+---
+################################################################################
+# CIS Ubuntu SSH Server Configuration - Offline Compliance Checks
+################################################################################
+#
+# PURPOSE:
+#   This playbook defines security compliance checks for SSH server configuration
+#   based on CIS Ubuntu Benchmark standards. It is used by the offline config
+#   audit feature to evaluate uploaded sshd_config files.
+#
+# USAGE:
+#   This file is automatically loaded by the SSHDConfigChecker class in api.py
+#   when performing offline configuration audits.
+#
+# MAINTENANCE:
+#   Developers can modify this file to:
+#   - Add new security checks
+#   - Update expected values for existing checks
+#   - Change severity levels
+#   - Modify remediation instructions
+#
+# CHECK TYPES SUPPORTED:
+#   - exact_match: Value must exactly match expected_value
+#   - exact_match_or_default: Value matches expected OR parameter not in config
+#   - in_list: Value must be in comma-separated list
+#   - not_in_list: Value must NOT be in comma-separated list
+#   - less_than_or_equal: Numeric value must be <= expected_value
+#   - range: Numeric value must be within min-max range (format: "min-max")
+#   - no_weak_ciphers: Value must not contain any weak ciphers from list
+#   - warning: Advisory check that generates WARNING instead of FAIL
+#
+# SEVERITY LEVELS: HIGH, MEDIUM, LOW
+#
+################################################################################
+
+checks:
+  # =============================================================================
+  # 5.2.1 - SSH Protocol Version
+  # =============================================================================
+  - id: "5.2.1"
+    name: "Ensure SSH Protocol is set to 2"
+    description: "SSH supports two different protocols. SSH v1 suffers from insecurities that do not affect SSH v2."
+    parameter: "protocol"
+    expected_value: "2"
+    default_value: "2"
+    check_type: "exact_match_or_default"
+    severity: "HIGH"
+    remediation: "Add or edit the Protocol line in /etc/ssh/sshd_config: Protocol 2"
+
+  # =============================================================================
+  # 5.2.2 - SSH Log Level
+  # =============================================================================
+  - id: "5.2.2"
+    name: "Ensure SSH LogLevel is appropriate"
+    description: "SSH provides several logging levels. INFO level is recommended for logging."
+    parameter: "loglevel"
+    expected_value: "info,verbose"
+    default_value: "info"
+    check_type: "in_list"
+    severity: "MEDIUM"
+    remediation: "Edit /etc/ssh/sshd_config to set: LogLevel INFO"
+
+  # =============================================================================
+  # 5.2.8 - Root Login Prevention
+  # =============================================================================
+  - id: "5.2.8"
+    name: "Ensure SSH root login is disabled"
+    description: "The PermitRootLogin parameter specifies if the root user can log in using ssh."
+    parameter: "permitrootlogin"
+    expected_value: "no,without-password,prohibit-password"
+    default_value: "yes"
+    check_type: "in_list"
+    severity: "HIGH"
+    remediation: "Edit /etc/ssh/sshd_config to set: PermitRootLogin no"
+
+  # =============================================================================
+  # 5.2.9 - Empty Password Prevention
+  # =============================================================================
+  - id: "5.2.9"
+    name: "Ensure SSH PermitEmptyPasswords is disabled"
+    description: "The PermitEmptyPasswords parameter specifies if the SSH server allows login with empty passwords."
+    parameter: "permitemptypasswords"
+    expected_value: "no"
+    default_value: "no"
+    check_type: "exact_match"
+    severity: "HIGH"
+    remediation: "Edit /etc/ssh/sshd_config to set: PermitEmptyPasswords no"
+
+  # =============================================================================
+  # 5.2.7 - Host-Based Authentication
+  # =============================================================================
+  - id: "5.2.7"
+    name: "Ensure SSH HostbasedAuthentication is disabled"
+    description: "The HostbasedAuthentication parameter specifies if authentication is allowed through trusted hosts."
+    parameter: "hostbasedauthentication"
+    expected_value: "no"
+    default_value: "no"
+    check_type: "exact_match"
+    severity: "HIGH"
+    remediation: "Edit /etc/ssh/sshd_config to set: HostbasedAuthentication no"
+
+  # =============================================================================
+  # 5.2.6 - Ignore Rhosts Files
+  # =============================================================================
+  - id: "5.2.6"
+    name: "Ensure SSH IgnoreRhosts is enabled"
+    description: "Setting IgnoreRhosts forces the SSH server to ignore .rhosts and .shosts files."
+    parameter: "ignorerhosts"
+    expected_value: "yes"
+    default_value: "yes"
+    check_type: "exact_match"
+    severity: "MEDIUM"
+    remediation: "Edit /etc/ssh/sshd_config to set: IgnoreRhosts yes"
+
+  # =============================================================================
+  # 5.2.4 - X11 Forwarding
+  # =============================================================================
+  - id: "5.2.4"
+    name: "Ensure SSH X11 forwarding is disabled"
+    description: "X11 forwarding may permit access to local displays."
+    parameter: "x11forwarding"
+    expected_value: "no"
+    default_value: "yes"
+    check_type: "exact_match"
+    severity: "MEDIUM"
+    remediation: "Edit /etc/ssh/sshd_config to set: X11Forwarding no"
+
+  # =============================================================================
+  # 5.2.5 - Maximum Authentication Attempts
+  # =============================================================================
+  - id: "5.2.5"
+    name: "Ensure SSH MaxAuthTries is set to 4 or less"
+    description: "The MaxAuthTries parameter specifies the maximum number of authentication attempts."
+    parameter: "maxauthtries"
+    expected_value: "4"
+    default_value: "6"
+    check_type: "less_than_or_equal"
+    severity: "MEDIUM"
+    remediation: "Edit /etc/ssh/sshd_config to set: MaxAuthTries 4"
+
+  # =============================================================================
+  # 5.2.10 - Password Authentication (Warning)
+  # =============================================================================
+  - id: "5.2.10"
+    name: "Ensure SSH PasswordAuthentication is disabled (if possible)"
+    description: "Disabling password authentication requires using SSH keys, which is more secure."
+    parameter: "passwordauthentication"
+    expected_value: "no"
+    default_value: "yes"
+    check_type: "warning"
+    severity: "MEDIUM"
+    remediation: "If feasible, edit /etc/ssh/sshd_config to set: PasswordAuthentication no"
+
+  # =============================================================================
+  # 5.2.11 - User Environment Variables
+  # =============================================================================
+  - id: "5.2.11"
+    name: "Ensure SSH PermitUserEnvironment is disabled"
+    description: "PermitUserEnvironment allows users to present environment options, which may bypass security controls."
+    parameter: "permituserenvironment"
+    expected_value: "no"
+    default_value: "no"
+    check_type: "exact_match"
+    severity: "HIGH"
+    remediation: "Edit /etc/ssh/sshd_config to set: PermitUserEnvironment no"
+
+  # =============================================================================
+  # 5.2.12 - Strong Ciphers Only
+  # =============================================================================
+  - id: "5.2.12"
+    name: "Ensure only strong ciphers are used"
+    description: "Strong ciphers should be used for SSH encryption."
+    parameter: "ciphers"
+    expected_value: "3des,des,rc4,arcfour"
+    default_value: ""
+    check_type: "no_weak_ciphers"
+    severity: "HIGH"
+    remediation: "Edit /etc/ssh/sshd_config to set: Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+
+  # =============================================================================
+  # 5.2.13 - Idle Session Timeout
+  # =============================================================================
+  - id: "5.2.13"
+    name: "Ensure SSH Idle Timeout Interval is configured"
+    description: "ClientAliveInterval sets timeout in seconds after which idle sessions are disconnected."
+    parameter: "clientaliveinterval"
+    expected_value: "1-300"
+    default_value: "0"
+    check_type: "range"
+    severity: "MEDIUM"
+    remediation: "Edit /etc/ssh/sshd_config to set: ClientAliveInterval 300 and ClientAliveCountMax 0"
+
+################################################################################
+# ADDING NEW CHECKS
+################################################################################
+#
+# To add a new check, copy this template and fill in the values:
+#
+# - id: "X.X.X"
+#   name: "Check Name"
+#   description: "What this check does and why it matters"
+#   parameter: "parameter_name"
+#   expected_value: "expected_value"
+#   default_value: "default_if_not_specified"
+#   check_type: "exact_match"
+#   severity: "HIGH"
+#   remediation: "How to fix if check fails"
+#
+# NOTES:
+# - Parameter names are case-insensitive
+# - For check_type "in_list", use comma-separated values
+# - For check_type "range", use format "min-max" (e.g., "1-300")
+# - Severity should be HIGH, MEDIUM, or LOW
+# - ID should follow CIS benchmark numbering when applicable
+#
+################################################################################

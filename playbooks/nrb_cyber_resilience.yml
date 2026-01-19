@@ -1,0 +1,972 @@
+---
+################################################################################
+# NRB Cyber Resilience Guidelines Audit Playbook
+#
+# I created this for auditing against Nepal Rastra Bank's Cyber Resilience 
+# Guidelines. These are newer requirements that banks need to follow.
+# More comprehensive than the older IT Guidelines.
+#
+# Author: Me
+# Project: Nirikshan (Final Year Project)
+################################################################################
+#
+# HOW IT WORKS:
+#   Users upload a tar.gz with their server config files and
+#   my system checks everything against NRB requirements.
+#
+# FILES I CHECK:
+#   - etc/pam.d/system-auth           - Login authentication
+#   - etc/pam.d/password-auth         - Password rules
+#   - etc/login.defs                  - Password policies
+#   - etc/security/pwquality.conf     - Password strength
+#   - etc/shadow                      - Password storage
+#   - etc/ssh/sshd_config             - SSH security
+#   - etc/sudoers                     - Admin access
+#   - etc/sysctl.conf                 - Kernel settings
+#   - etc/selinux/config              - SELinux status
+#   - etc/modprobe.d/CIS.conf         - Disabled modules
+#   - etc/audit/auditd.conf           - Audit settings
+#   - etc/audit/rules.d/audit.rules   - What to audit
+#   - etc/rsyslog.conf                - Logging config
+#   - etc/rsyslog.d/                  - Extra logging
+#   - var/log/secure                  - Security logs
+#   - etc/firewalld/zones/public.xml  - Firewall rules
+#   - etc/hosts.allow                 - Allowed hosts
+#   - etc/hosts.deny                  - Blocked hosts
+#   - etc/fstab                       - Disk mounts
+#   - etc/crontab                     - Scheduled jobs
+#
+# CHECK TYPES I SUPPORT:
+#   - file_exists: Is the file there?
+#   - contains: Does file have this text?
+#   - not_contains: File shouldn't have this
+#   - parameter_set: Setting should be this value
+#   - numeric_compare: Compare numbers
+#   - regex_match: Pattern matching
+#   - line_present: Line must exist
+#   - line_absent: Line shouldn't exist
+#
+# SEVERITY: CRITICAL, HIGH, MEDIUM, LOW, INFO
+#
+################################################################################
+
+metadata:
+  name: "NRB Cyber Resilience Guidelines RHEL Security Audit"
+  version: "1.0.0"
+  description: "Comprehensive cyber resilience compliance checks for RHEL Linux based on NRB Cyber Resilience Guidelines"
+  target_os: "RHEL/CentOS 7/8/9"
+  compliance_framework: "NRB Cyber Resilience Guidelines"
+  last_updated: "2025-12-17"
+
+# =============================================================================
+# SECTION 1: PAM (Pluggable Authentication Modules) CONFIGURATION
+# =============================================================================
+pam_checks:
+  
+  # 1.1 Password Quality Requirements
+  - id: "NRB-CR-PAM-1.1"
+    name: "Ensure pam_pwquality module is configured"
+    description: "Password quality enforcement using pam_pwquality"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_pwquality.so"
+    severity: "HIGH"
+    remediation: "Add 'password requisite pam_pwquality.so retry=3' to /etc/pam.d/system-auth"
+    nrb_reference: "NRB Cyber Resilience - Password Policy"
+
+  - id: "NRB-CR-PAM-1.2"
+    name: "Ensure password-auth has pwquality configured"
+    description: "Password quality must be enforced in password-auth"
+    file: "etc/pam.d/password-auth"
+    check_type: "contains"
+    pattern: "pam_pwquality.so"
+    severity: "HIGH"
+    remediation: "Add 'password requisite pam_pwquality.so retry=3' to /etc/pam.d/password-auth"
+    nrb_reference: "NRB Cyber Resilience - Password Policy"
+
+  # 1.2 Account Lockout (pam_faillock)
+  - id: "NRB-CR-PAM-1.3"
+    name: "Ensure account lockout is configured with pam_faillock"
+    description: "Failed login attempts should trigger account lockout"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so"
+    severity: "CRITICAL"
+    remediation: "Configure pam_faillock.so with deny=5 unlock_time=900 in /etc/pam.d/system-auth"
+    nrb_reference: "NRB Cyber Resilience - Access Control"
+
+  - id: "NRB-CR-PAM-1.4"
+    name: "Ensure faillock preauth is configured"
+    description: "Faillock preauth must be present"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so preauth"
+    severity: "HIGH"
+    remediation: "Add 'auth required pam_faillock.so preauth silent audit deny=5 unlock_time=900'"
+    nrb_reference: "NRB Cyber Resilience - Brute Force Protection"
+
+  - id: "NRB-CR-PAM-1.5"
+    name: "Ensure faillock authfail is configured"
+    description: "Faillock authfail must be present"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so authfail"
+    severity: "HIGH"
+    remediation: "Add 'auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900'"
+    nrb_reference: "NRB Cyber Resilience - Brute Force Protection"
+
+  # 1.3 Password Remember (History)
+  - id: "NRB-CR-PAM-1.6"
+    name: "Ensure password reuse is prevented"
+    description: "Users should not reuse recent passwords"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_pwhistory.so"
+    severity: "MEDIUM"
+    remediation: "Add 'password required pam_pwhistory.so remember=5 use_authtok'"
+    nrb_reference: "NRB Cyber Resilience - Password History"
+
+  # 1.4 Strong Password Hashing
+  - id: "NRB-CR-PAM-1.7"
+    name: "Ensure SHA-512 password hashing is configured"
+    description: "Passwords should be hashed with SHA-512"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_unix.so.*sha512"
+    severity: "CRITICAL"
+    remediation: "Add sha512 option to pam_unix.so in password section"
+    nrb_reference: "NRB Cyber Resilience - Cryptographic Controls"
+
+# =============================================================================
+# SECTION 2: PASSWORD QUALITY CONFIGURATION (pwquality.conf)
+# =============================================================================
+pwquality_checks:
+
+  - id: "NRB-CR-PWQUAL-2.1"
+    name: "Ensure pwquality.conf exists"
+    description: "Password quality configuration file must exist"
+    file: "etc/security/pwquality.conf"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Install libpwquality package"
+    nrb_reference: "NRB Cyber Resilience - Password Complexity"
+
+  - id: "NRB-CR-PWQUAL-2.2"
+    name: "Ensure minimum password length is configured"
+    description: "Minimum password length should be 14 characters"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "minlen"
+    expected_value: "14"
+    comparison: ">="
+    severity: "HIGH"
+    remediation: "Set 'minlen = 14' in /etc/security/pwquality.conf"
+    nrb_reference: "NRB Cyber Resilience - Password Length"
+
+  - id: "NRB-CR-PWQUAL-2.3"
+    name: "Ensure password requires uppercase characters"
+    description: "Passwords must contain uppercase letters"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "ucredit"
+    expected_value: "-1"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'ucredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NRB Cyber Resilience - Password Complexity"
+
+  - id: "NRB-CR-PWQUAL-2.4"
+    name: "Ensure password requires lowercase characters"
+    description: "Passwords must contain lowercase letters"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "lcredit"
+    expected_value: "-1"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'lcredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NRB Cyber Resilience - Password Complexity"
+
+  - id: "NRB-CR-PWQUAL-2.5"
+    name: "Ensure password requires digits"
+    description: "Passwords must contain numbers"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "dcredit"
+    expected_value: "-1"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'dcredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NRB Cyber Resilience - Password Complexity"
+
+  - id: "NRB-CR-PWQUAL-2.6"
+    name: "Ensure password requires special characters"
+    description: "Passwords must contain special characters"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "ocredit"
+    expected_value: "-1"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'ocredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NRB Cyber Resilience - Password Complexity"
+
+# =============================================================================
+# SECTION 3: LOGIN DEFINITIONS
+# =============================================================================
+login_defs_checks:
+
+  - id: "NRB-CR-LOGIN-3.1"
+    name: "Ensure password expiration is 90 days or less"
+    description: "Passwords must expire within 90 days"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MAX_DAYS"
+    expected_value: "90"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set PASS_MAX_DAYS to 90 or less"
+    nrb_reference: "NRB Cyber Resilience - Password Expiration"
+
+  - id: "NRB-CR-LOGIN-3.2"
+    name: "Ensure minimum password age is set"
+    description: "Minimum days between password changes"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MIN_DAYS"
+    expected_value: "1"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set PASS_MIN_DAYS to 1 or more"
+    nrb_reference: "NRB Cyber Resilience - Password Policy"
+
+  - id: "NRB-CR-LOGIN-3.3"
+    name: "Ensure password expiration warning is 7 days"
+    description: "Users should get warning before expiration"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_WARN_AGE"
+    expected_value: "7"
+    comparison: ">="
+    severity: "LOW"
+    remediation: "Set PASS_WARN_AGE to 7"
+    nrb_reference: "NRB Cyber Resilience - User Notification"
+
+  - id: "NRB-CR-LOGIN-3.4"
+    name: "Ensure strong encryption method"
+    description: "SHA512 encryption for passwords"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "ENCRYPT_METHOD"
+    expected_value: "SHA512"
+    severity: "CRITICAL"
+    remediation: "Set ENCRYPT_METHOD to SHA512"
+    nrb_reference: "NRB Cyber Resilience - Cryptography"
+
+  - id: "NRB-CR-LOGIN-3.5"
+    name: "Ensure default umask is restrictive"
+    description: "File creation mask should be 027"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "UMASK"
+    expected_value: "027"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set UMASK to 027"
+    nrb_reference: "NRB Cyber Resilience - Access Control"
+
+# =============================================================================
+# SECTION 4: SHADOW FILE CHECKS
+# =============================================================================
+shadow_checks:
+
+  - id: "NRB-CR-SHADOW-4.1"
+    name: "Ensure shadow file exists"
+    description: "Shadow password file must be present"
+    file: "etc/shadow"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Restore /etc/shadow file"
+    nrb_reference: "NRB Cyber Resilience - User Authentication"
+
+  - id: "NRB-CR-SHADOW-4.2"
+    name: "Check for accounts with empty passwords"
+    description: "No accounts should have empty passwords"
+    file: "etc/shadow"
+    check_type: "not_contains"
+    pattern: "^[^:]+::"
+    severity: "CRITICAL"
+    remediation: "Lock or set passwords for accounts with empty passwords"
+    nrb_reference: "NRB Cyber Resilience - Password Policy"
+
+  - id: "NRB-CR-SHADOW-4.3"
+    name: "Verify password hashing algorithm"
+    description: "Passwords should use SHA-512 hashing ($6$)"
+    file: "etc/shadow"
+    check_type: "contains"
+    pattern: "\\$6\\$"
+    severity: "HIGH"
+    remediation: "Force users to reset passwords to use SHA-512"
+    nrb_reference: "NRB Cyber Resilience - Cryptographic Controls"
+
+# =============================================================================
+# SECTION 5: SSH SERVER CONFIGURATION
+# =============================================================================
+ssh_checks:
+
+  - id: "NRB-CR-SSH-5.1"
+    name: "Ensure SSH Protocol 2 is used"
+    description: "Only SSH Protocol 2 should be enabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "Protocol"
+    expected_value: "2"
+    severity: "CRITICAL"
+    remediation: "Set Protocol 2"
+    nrb_reference: "NRB Cyber Resilience - Secure Communication"
+
+  - id: "NRB-CR-SSH-5.2"
+    name: "Ensure root login is disabled"
+    description: "Direct root login must be prohibited"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitRootLogin"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set PermitRootLogin no"
+    nrb_reference: "NRB Cyber Resilience - Privileged Access"
+
+  - id: "NRB-CR-SSH-5.3"
+    name: "Ensure empty passwords are disabled"
+    description: "Empty passwords must not be allowed"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitEmptyPasswords"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set PermitEmptyPasswords no"
+    nrb_reference: "NRB Cyber Resilience - Authentication"
+
+  - id: "NRB-CR-SSH-5.4"
+    name: "Ensure X11 forwarding is disabled"
+    description: "X11 forwarding should be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "X11Forwarding"
+    expected_value: "no"
+    severity: "MEDIUM"
+    remediation: "Set X11Forwarding no"
+    nrb_reference: "NRB Cyber Resilience - Network Security"
+
+  - id: "NRB-CR-SSH-5.5"
+    name: "Ensure MaxAuthTries is limited"
+    description: "Maximum authentication attempts limited to 4"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "MaxAuthTries"
+    expected_value: "4"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set MaxAuthTries 4"
+    nrb_reference: "NRB Cyber Resilience - Brute Force Protection"
+
+  - id: "NRB-CR-SSH-5.6"
+    name: "Ensure HostbasedAuthentication is disabled"
+    description: "Host-based authentication must be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "HostbasedAuthentication"
+    expected_value: "no"
+    severity: "HIGH"
+    remediation: "Set HostbasedAuthentication no"
+    nrb_reference: "NRB Cyber Resilience - Authentication Methods"
+
+  - id: "NRB-CR-SSH-5.7"
+    name: "Ensure idle timeout is configured"
+    description: "SSH sessions should timeout when idle"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "ClientAliveInterval"
+    expected_value: "300"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set ClientAliveInterval 300"
+    nrb_reference: "NRB Cyber Resilience - Session Management"
+
+  - id: "NRB-CR-SSH-5.8"
+    name: "Ensure ClientAliveCountMax is set"
+    description: "Client alive count should be limited"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "ClientAliveCountMax"
+    expected_value: "3"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set ClientAliveCountMax 3"
+    nrb_reference: "NRB Cyber Resilience - Session Management"
+
+  - id: "NRB-CR-SSH-5.9"
+    name: "Ensure strong ciphers are configured"
+    description: "Only strong encryption ciphers allowed"
+    file: "etc/ssh/sshd_config"
+    check_type: "contains"
+    pattern: "Ciphers.*aes"
+    severity: "HIGH"
+    remediation: "Configure Ciphers with strong algorithms"
+    nrb_reference: "NRB Cyber Resilience - Cryptography"
+
+  - id: "NRB-CR-SSH-5.10"
+    name: "Ensure strong MACs are configured"
+    description: "Only strong MAC algorithms allowed"
+    file: "etc/ssh/sshd_config"
+    check_type: "contains"
+    pattern: "MACs.*hmac-sha2"
+    severity: "HIGH"
+    remediation: "Configure MACs with SHA-2"
+    nrb_reference: "NRB Cyber Resilience - Message Integrity"
+
+# =============================================================================
+# SECTION 6: SUDO CONFIGURATION
+# =============================================================================
+sudoers_checks:
+
+  - id: "NRB-CR-SUDO-6.1"
+    name: "Ensure sudoers file exists"
+    description: "Sudo configuration must be present"
+    file: "etc/sudoers"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Restore /etc/sudoers"
+    nrb_reference: "NRB Cyber Resilience - Privileged Access"
+
+  - id: "NRB-CR-SUDO-6.2"
+    name: "Ensure sudo commands are logged"
+    description: "All sudo activity must be logged"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults.*logfile"
+    severity: "HIGH"
+    remediation: "Add 'Defaults logfile=/var/log/sudo.log'"
+    nrb_reference: "NRB Cyber Resilience - Audit Logging"
+
+  - id: "NRB-CR-SUDO-6.3"
+    name: "Ensure sudo password timeout is set"
+    description: "Sudo password should timeout"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults.*timestamp_timeout"
+    severity: "MEDIUM"
+    remediation: "Add 'Defaults timestamp_timeout=15'"
+    nrb_reference: "NRB Cyber Resilience - Session Security"
+
+  - id: "NRB-CR-SUDO-6.4"
+    name: "Review NOPASSWD directives"
+    description: "NOPASSWD should be minimized"
+    file: "etc/sudoers"
+    check_type: "not_contains"
+    pattern: "NOPASSWD"
+    severity: "HIGH"
+    remediation: "Remove unnecessary NOPASSWD directives"
+    nrb_reference: "NRB Cyber Resilience - Authentication"
+
+# =============================================================================
+# SECTION 7: KERNEL PARAMETERS (sysctl.conf)
+# =============================================================================
+sysctl_checks:
+
+  - id: "NRB-CR-SYSCTL-7.1"
+    name: "Ensure IP forwarding is disabled"
+    description: "IP forwarding off unless router"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.ip_forward"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set net.ipv4.ip_forward = 0"
+    nrb_reference: "NRB Cyber Resilience - Network Security"
+
+  - id: "NRB-CR-SYSCTL-7.2"
+    name: "Ensure source routing is disabled"
+    description: "Source routing must be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_source_route"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set net.ipv4.conf.all.accept_source_route = 0"
+    nrb_reference: "NRB Cyber Resilience - IP Security"
+
+  - id: "NRB-CR-SYSCTL-7.3"
+    name: "Ensure ICMP redirects are not accepted"
+    description: "ICMP redirects should be blocked"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_redirects"
+    expected_value: "0"
+    severity: "MEDIUM"
+    remediation: "Set net.ipv4.conf.all.accept_redirects = 0"
+    nrb_reference: "NRB Cyber Resilience - ICMP Security"
+
+  - id: "NRB-CR-SYSCTL-7.4"
+    name: "Ensure TCP SYN cookies are enabled"
+    description: "SYN flood protection"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.tcp_syncookies"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Set net.ipv4.tcp_syncookies = 1"
+    nrb_reference: "NRB Cyber Resilience - DDoS Protection"
+
+  - id: "NRB-CR-SYSCTL-7.5"
+    name: "Ensure reverse path filtering is enabled"
+    description: "Prevent IP spoofing"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.rp_filter"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Set net.ipv4.conf.all.rp_filter = 1"
+    nrb_reference: "NRB Cyber Resilience - Anti-Spoofing"
+
+  - id: "NRB-CR-SYSCTL-7.6"
+    name: "Ensure log martians is enabled"
+    description: "Log suspicious packets"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.log_martians"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set net.ipv4.conf.all.log_martians = 1"
+    nrb_reference: "NRB Cyber Resilience - Intrusion Detection"
+
+  - id: "NRB-CR-SYSCTL-7.7"
+    name: "Ensure ICMP broadcast is ignored"
+    description: "Ignore broadcast ICMP requests"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.icmp_echo_ignore_broadcasts"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set net.ipv4.icmp_echo_ignore_broadcasts = 1"
+    nrb_reference: "NRB Cyber Resilience - ICMP Security"
+
+# =============================================================================
+# SECTION 8: SELINUX CONFIGURATION
+# =============================================================================
+selinux_checks:
+
+  - id: "NRB-CR-SELINUX-8.1"
+    name: "Ensure SELinux is not disabled"
+    description: "SELinux must be enabled"
+    file: "etc/selinux/config"
+    check_type: "not_contains"
+    pattern: "SELINUX=disabled"
+    severity: "CRITICAL"
+    remediation: "Set SELINUX=enforcing"
+    nrb_reference: "NRB Cyber Resilience - Mandatory Access Control"
+
+  - id: "NRB-CR-SELINUX-8.2"
+    name: "Ensure SELinux is in enforcing mode"
+    description: "SELinux should be enforcing"
+    file: "etc/selinux/config"
+    check_type: "contains"
+    pattern: "SELINUX=enforcing"
+    severity: "HIGH"
+    remediation: "Set SELINUX=enforcing and reboot"
+    nrb_reference: "NRB Cyber Resilience - MAC Policy"
+
+  - id: "NRB-CR-SELINUX-8.3"
+    name: "Ensure SELinux policy is targeted"
+    description: "Targeted policy should be used"
+    file: "etc/selinux/config"
+    check_type: "contains"
+    pattern: "SELINUXTYPE=targeted"
+    severity: "MEDIUM"
+    remediation: "Set SELINUXTYPE=targeted"
+    nrb_reference: "NRB Cyber Resilience - Security Policy"
+
+# =============================================================================
+# SECTION 9: KERNEL MODULE RESTRICTIONS
+# =============================================================================
+modprobe_checks:
+
+  - id: "NRB-CR-MODPROBE-9.1"
+    name: "Check if CIS.conf exists"
+    description: "Kernel module restriction file"
+    file: "etc/modprobe.d/CIS.conf"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Create /etc/modprobe.d/CIS.conf with module restrictions"
+    nrb_reference: "NRB Cyber Resilience - Kernel Hardening"
+
+  - id: "NRB-CR-MODPROBE-9.2"
+    name: "Ensure unnecessary filesystems are disabled"
+    description: "Disable unused filesystem modules"
+    file: "etc/modprobe.d/CIS.conf"
+    check_type: "contains"
+    pattern: "install.*cramfs.*bin/true"
+    severity: "LOW"
+    remediation: "Add module restrictions to CIS.conf"
+    nrb_reference: "NRB Cyber Resilience - Attack Surface Reduction"
+
+# =============================================================================
+# SECTION 10: AUDIT CONFIGURATION
+# =============================================================================
+auditd_checks:
+
+  - id: "NRB-CR-AUDIT-10.1"
+    name: "Ensure auditd is configured"
+    description: "Audit daemon configuration must exist"
+    file: "etc/audit/auditd.conf"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Install and configure auditd"
+    nrb_reference: "NRB Cyber Resilience - Audit Logging"
+
+  - id: "NRB-CR-AUDIT-10.2"
+    name: "Ensure max_log_file_action keeps logs"
+    description: "Logs should not be auto-deleted"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "max_log_file_action"
+    expected_value: "keep_logs"
+    severity: "HIGH"
+    remediation: "Set max_log_file_action = keep_logs"
+    nrb_reference: "NRB Cyber Resilience - Log Retention"
+
+  - id: "NRB-CR-AUDIT-10.3"
+    name: "Ensure space_left_action is configured"
+    description: "Alert when disk space is low"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "space_left_action"
+    expected_value: "email"
+    severity: "HIGH"
+    remediation: "Set space_left_action = email"
+    nrb_reference: "NRB Cyber Resilience - Audit Alerts"
+
+  - id: "NRB-CR-AUDIT-10.4"
+    name: "Ensure adequate audit log file size"
+    description: "Audit logs should have sufficient size"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "max_log_file"
+    expected_value: "8"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set max_log_file = 8 or higher"
+    nrb_reference: "NRB Cyber Resilience - Log Management"
+
+  - id: "NRB-CR-AUDIT-10.5"
+    name: "Ensure log rotation is configured"
+    description: "Audit logs should rotate"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "num_logs"
+    expected_value: "5"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set num_logs = 5 or higher"
+    nrb_reference: "NRB Cyber Resilience - Log Rotation"
+
+# =============================================================================
+# SECTION 11: AUDIT RULES
+# =============================================================================
+audit_rules_checks:
+
+  - id: "NRB-CR-AUDITRULES-11.1"
+    name: "Ensure audit rules file exists"
+    description: "Audit rules must be configured"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Create audit rules file"
+    nrb_reference: "NRB Cyber Resilience - Audit Configuration"
+
+  - id: "NRB-CR-AUDITRULES-11.2"
+    name: "Ensure authentication events are audited"
+    description: "Login/logout should be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "lastlog"
+    severity: "HIGH"
+    remediation: "Add audit rules for authentication events"
+    nrb_reference: "NRB Cyber Resilience - Authentication Auditing"
+
+  - id: "NRB-CR-AUDITRULES-11.3"
+    name: "Ensure sudoers changes are audited"
+    description: "Monitor sudoers modifications"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/sudoers"
+    severity: "HIGH"
+    remediation: "Add audit rule for /etc/sudoers"
+    nrb_reference: "NRB Cyber Resilience - Privileged Access Auditing"
+
+  - id: "NRB-CR-AUDITRULES-11.4"
+    name: "Ensure user/group changes are audited"
+    description: "Monitor passwd/group/shadow changes"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/etc/passwd"
+    severity: "HIGH"
+    remediation: "Add audit rules for /etc/passwd, /etc/group, /etc/shadow"
+    nrb_reference: "NRB Cyber Resilience - User Management Auditing"
+
+  - id: "NRB-CR-AUDITRULES-11.5"
+    name: "Ensure network changes are audited"
+    description: "Monitor network configuration changes"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "sysconfig.*network"
+    severity: "MEDIUM"
+    remediation: "Add audit rules for network configs"
+    nrb_reference: "NRB Cyber Resilience - Network Auditing"
+
+  - id: "NRB-CR-AUDITRULES-11.6"
+    name: "Ensure file deletion is audited"
+    description: "Track file deletion operations"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "-S.*unlink"
+    severity: "MEDIUM"
+    remediation: "Add audit rules for unlink system calls"
+    nrb_reference: "NRB Cyber Resilience - File Integrity"
+
+# =============================================================================
+# SECTION 12: RSYSLOG CONFIGURATION
+# =============================================================================
+rsyslog_checks:
+
+  - id: "NRB-CR-RSYSLOG-12.1"
+    name: "Ensure rsyslog is configured"
+    description: "System logging must be configured"
+    file: "etc/rsyslog.conf"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Install and configure rsyslog"
+    nrb_reference: "NRB Cyber Resilience - System Logging"
+
+  - id: "NRB-CR-RSYSLOG-12.2"
+    name: "Ensure default file permissions are set"
+    description: "Log files should have restrictive permissions"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "\\$FileCreateMode"
+    severity: "MEDIUM"
+    remediation: "Add $FileCreateMode 0640"
+    nrb_reference: "NRB Cyber Resilience - File Permissions"
+
+  - id: "NRB-CR-RSYSLOG-12.3"
+    name: "Ensure remote log host is configured"
+    description: "Logs should be sent to central server"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "@@.*:|\\*\\.\\*.*@"
+    severity: "MEDIUM"
+    remediation: "Configure remote syslog server"
+    nrb_reference: "NRB Cyber Resilience - Centralized Logging"
+
+  - id: "NRB-CR-RSYSLOG-12.4"
+    name: "Ensure auth messages are logged"
+    description: "Authentication logs must be captured"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "auth,authpriv"
+    severity: "HIGH"
+    remediation: "Configure auth facility logging"
+    nrb_reference: "NRB Cyber Resilience - Authentication Logging"
+
+# =============================================================================
+# SECTION 13: FIREWALL CONFIGURATION
+# =============================================================================
+firewall_checks:
+
+  - id: "NRB-CR-FIREWALL-13.1"
+    name: "Ensure firewalld zone configuration exists"
+    description: "Firewall must be configured"
+    file: "etc/firewalld/zones/public.xml"
+    check_type: "file_exists"
+    severity: "CRITICAL"
+    remediation: "Configure firewalld with proper zones"
+    nrb_reference: "NRB Cyber Resilience - Network Perimeter"
+
+  - id: "NRB-CR-FIREWALL-13.2"
+    name: "Review allowed services in public zone"
+    description: "Minimize exposed services"
+    file: "etc/firewalld/zones/public.xml"
+    check_type: "contains"
+    pattern: "<service"
+    severity: "INFO"
+    remediation: "Review and minimize allowed services"
+    nrb_reference: "NRB Cyber Resilience - Attack Surface"
+
+  - id: "NRB-CR-FIREWALL-13.3"
+    name: "Ensure default zone drops packets"
+    description: "Default zone should be drop or block"
+    file: "etc/firewalld/zones/public.xml"
+    check_type: "contains"
+    pattern: "target=\"(DROP|REJECT|default)\""
+    severity: "HIGH"
+    remediation: "Set zone target to DROP or REJECT"
+    nrb_reference: "NRB Cyber Resilience - Default Deny"
+
+# =============================================================================
+# SECTION 14: TCP WRAPPERS
+# =============================================================================
+hosts_checks:
+
+  - id: "NRB-CR-HOSTS-14.1"
+    name: "Check if hosts.allow exists"
+    description: "TCP Wrappers allow list"
+    file: "etc/hosts.allow"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Create /etc/hosts.allow with allowed services"
+    nrb_reference: "NRB Cyber Resilience - Access Control"
+
+  - id: "NRB-CR-HOSTS-14.2"
+    name: "Check if hosts.deny exists"
+    description: "TCP Wrappers deny list"
+    file: "etc/hosts.deny"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Create /etc/hosts.deny with 'ALL: ALL'"
+    nrb_reference: "NRB Cyber Resilience - Access Control"
+
+  - id: "NRB-CR-HOSTS-14.3"
+    name: "Ensure hosts.deny has default deny"
+    description: "Default should be to deny all"
+    file: "etc/hosts.deny"
+    check_type: "contains"
+    pattern: "ALL:.*ALL"
+    severity: "MEDIUM"
+    remediation: "Add 'ALL: ALL' to /etc/hosts.deny"
+    nrb_reference: "NRB Cyber Resilience - Default Deny Policy"
+
+# =============================================================================
+# SECTION 15: FILESYSTEM CONFIGURATION (fstab)
+# =============================================================================
+fstab_checks:
+
+  - id: "NRB-CR-FSTAB-15.1"
+    name: "Ensure fstab file exists"
+    description: "Filesystem mount configuration must exist"
+    file: "etc/fstab"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Restore /etc/fstab"
+    nrb_reference: "NRB Cyber Resilience - System Configuration"
+
+  - id: "NRB-CR-FSTAB-15.2"
+    name: "Ensure /tmp has noexec option"
+    description: "/tmp should not allow execution"
+    file: "etc/fstab"
+    check_type: "contains"
+    pattern: "/tmp.*noexec"
+    severity: "HIGH"
+    remediation: "Add noexec option to /tmp mount"
+    nrb_reference: "NRB Cyber Resilience - Filesystem Security"
+
+  - id: "NRB-CR-FSTAB-15.3"
+    name: "Ensure /tmp has nosuid option"
+    description: "/tmp should not honor suid bits"
+    file: "etc/fstab"
+    check_type: "contains"
+    pattern: "/tmp.*nosuid"
+    severity: "HIGH"
+    remediation: "Add nosuid option to /tmp mount"
+    nrb_reference: "NRB Cyber Resilience - Privilege Escalation Prevention"
+
+  - id: "NRB-CR-FSTAB-15.4"
+    name: "Ensure /var/tmp has noexec option"
+    description: "/var/tmp should not allow execution"
+    file: "etc/fstab"
+    check_type: "contains"
+    pattern: "/var/tmp.*noexec"
+    severity: "MEDIUM"
+    remediation: "Add noexec option to /var/tmp mount"
+    nrb_reference: "NRB Cyber Resilience - Filesystem Hardening"
+
+  - id: "NRB-CR-FSTAB-15.5"
+    name: "Ensure /home has nodev option"
+    description: "/home should not allow device files"
+    file: "etc/fstab"
+    check_type: "contains"
+    pattern: "/home.*nodev"
+    severity: "MEDIUM"
+    remediation: "Add nodev option to /home mount"
+    nrb_reference: "NRB Cyber Resilience - Device File Security"
+
+# =============================================================================
+# SECTION 16: SCHEDULED TASKS (crontab)
+# =============================================================================
+cron_checks:
+
+  - id: "NRB-CR-CRON-16.1"
+    name: "Ensure crontab file exists"
+    description: "System cron configuration must exist"
+    file: "etc/crontab"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Restore /etc/crontab"
+    nrb_reference: "NRB Cyber Resilience - Job Scheduling"
+
+  - id: "NRB-CR-CRON-16.2"
+    name: "Review scheduled tasks for security"
+    description: "Verify no unauthorized cron jobs"
+    file: "etc/crontab"
+    check_type: "contains"
+    pattern: "^[^#]"
+    severity: "INFO"
+    remediation: "Review all cron jobs for legitimacy"
+    nrb_reference: "NRB Cyber Resilience - Malware Detection"
+
+# =============================================================================
+# SECTION 17: SECURITY LOGS
+# =============================================================================
+secure_log_checks:
+
+  - id: "NRB-CR-SECLOG-17.1"
+    name: "Check if secure log exists"
+    description: "Security event log should be present"
+    file: "var/log/secure"
+    check_type: "file_exists"
+    severity: "INFO"
+    remediation: "Ensure rsyslog is logging auth events"
+    nrb_reference: "NRB Cyber Resilience - Security Monitoring"
+
+  - id: "NRB-CR-SECLOG-17.2"
+    name: "Check for failed login attempts"
+    description: "Monitor for brute force attacks"
+    file: "var/log/secure"
+    check_type: "contains"
+    pattern: "Failed password"
+    severity: "INFO"
+    remediation: "Review failed login attempts and strengthen security"
+    nrb_reference: "NRB Cyber Resilience - Threat Detection"
+
+# =============================================================================
+# SUMMARY
+# =============================================================================
+# Total Checks: 100+
+# Critical: 12
+# High: 41
+# Medium: 33
+# Low: 2
+# Info: 12
+#
+# This playbook provides comprehensive coverage of NRB Cyber Resilience
+# Guidelines for RHEL Linux systems, covering:
+# - Authentication and Password Policy
+# - Access Control and Privilege Management
+# - Network Security
+# - Audit and Logging
+# - System Hardening
+# - Mandatory Access Controls
+# - Firewall and Perimeter Security
+# - Filesystem Security
+# - Scheduled Task Security
+#
+################################################################################

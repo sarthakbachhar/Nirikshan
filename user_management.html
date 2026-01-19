@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Nirikshan - User Management Page
+    This is the admin panel where administrators can view and delete users.
+    Only admins can access this page - regular staff can't see it.
+    
+    Author: Me
+    Project: Nirikshan (Final Year Project)
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management | Admin Panel</title>
+    <style>
+        /* Simple styling for the admin page */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f7f7f7;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        /* Table to show all users */
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th {
+            background: #343a40;
+            color: white;
+        }
+        /* Delete button styling - red to show it's destructive */
+        button {
+            padding: 6px 12px;
+            background: #d9534f;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #c9302c;
+        }
+    </style>
+</head>
+<body>
+
+<h2>User Management (Administrator Only)</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="userTable">
+        <!-- I fill this table with JavaScript -->
+    </tbody>
+</table>
+
+<script>
+    // Function to fetch and display all users
+    async function loadUsers() {
+        const res = await fetch("/api/users");
+        const users = await res.json();
+
+        const table = document.getElementById("userTable");
+        table.innerHTML = "";
+
+        users.forEach(user => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.role}</td>
+                <td>
+                    <button onclick="deleteUser('${user.username}')">Delete</button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+    }
+
+    async function deleteUser(username) {
+        const response = await fetch("/api/delete-user", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username})
+        });
+
+        const result = await response.json();
+
+        alert(result.message);
+        loadUsers();
+    }
+
+    loadUsers();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,717 @@
+---
+################################################################################
+# NTA Cyber Byelaw 2020 Security Audit Playbook
+#
+# I made this playbook to check systems against Nepal Telecom Authority's
+# Cyber Security Byelaw 2020 requirements. This is important for telecom
+# companies and ISPs in Nepal.
+#
+# Author: Me
+# Project: Nirikshan (Final Year Project)
+################################################################################
+
+metadata:
+  name: "NTA Cyber Byelaw 2020 RHEL Security Audit"
+  version: "1.0.0"
+  description: "Nepal Telecom Authority Cyber Security Byelaw 2020 compliance checks"
+  target_os: "RHEL/CentOS 7/8/9"
+  compliance_framework: "NTA Cyber Byelaw 2020"
+  last_updated: "2025-12-17"
+
+# =============================================================================
+# SECTION 1: PAM CONFIGURATION
+# These checks verify password and authentication policies
+# =============================================================================
+pam_checks:
+  
+  # Check if account lockout is configured to prevent brute force attacks
+  - id: "NTA-PAM-1.1"
+    name: "PAM - Account Lockout Policy"
+    description: "Account lockout mechanism must be configured"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "pam_faillock.so"
+    severity: "HIGH"
+    remediation: "Add 'auth required pam_faillock.so preauth audit deny=5 unlock_time=900' to /etc/pam.d/system-auth"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Access Control"
+
+  # Make sure users can't reuse their old passwords
+  - id: "NTA-PAM-1.2"
+    name: "PAM - Password History Enforcement"
+    description: "Password history must be enforced to prevent password reuse"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "remember="
+    severity: "HIGH"
+    remediation: "Add 'password sufficient pam_unix.so remember=5' to /etc/pam.d/system-auth"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Policy"
+
+  # Passwords should be hashed with SHA-512, not older algorithms
+  - id: "NTA-PAM-1.3"
+    name: "PAM - Strong Password Hashing"
+    description: "SHA-512 hashing algorithm must be used for password storage"
+    file: "etc/pam.d/system-auth"
+    check_type: "contains"
+    pattern: "sha512"
+    severity: "CRITICAL"
+    remediation: "Ensure 'password sufficient pam_unix.so sha512' is configured in /etc/pam.d/system-auth"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Cryptography"
+
+# =============================================================================
+# SECTION 2: LOGIN.DEFS
+# =============================================================================
+login_defs_checks:
+
+  - id: "NTA-LOGIN-2.1"
+    name: "Password Minimum Length"
+    description: "NTA requires minimum password length of 8 characters"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MIN_LEN"
+    expected_value: "8"
+    comparison: ">="
+    severity: "HIGH"
+    remediation: "Set 'PASS_MIN_LEN 8' or higher in /etc/login.defs"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Standards"
+
+  - id: "NTA-LOGIN-2.2"
+    name: "Password Maximum Age"
+    description: "Passwords must expire within 90 days as per NTA guidelines"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MAX_DAYS"
+    expected_value: "90"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set 'PASS_MAX_DAYS 90' or lower in /etc/login.defs"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Aging"
+
+  - id: "NTA-LOGIN-2.3"
+    name: "Password Minimum Age"
+    description: "Minimum days between password changes"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_MIN_DAYS"
+    expected_value: "1"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set 'PASS_MIN_DAYS 1' in /etc/login.defs"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Policy"
+
+  - id: "NTA-LOGIN-2.4"
+    name: "Password Expiry Warning"
+    description: "Users should receive password expiry warning 7 days in advance"
+    file: "etc/login.defs"
+    check_type: "parameter_set"
+    parameter: "PASS_WARN_AGE"
+    expected_value: "7"
+    comparison: ">="
+    severity: "LOW"
+    remediation: "Set 'PASS_WARN_AGE 7' in /etc/login.defs"
+    nrb_reference: "NTA Cyber Byelaw 2020 - User Notification"
+
+  - id: "NTA-LOGIN-2.5"
+    name: "Strong Password Encryption Method"
+    description: "SHA-512 encryption method must be configured"
+    file: "etc/login.defs"
+    check_type: "contains"
+    pattern: "SHA512"
+    severity: "CRITICAL"
+    remediation: "Set 'ENCRYPT_METHOD SHA512' in /etc/login.defs"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Cryptography"
+
+# =============================================================================
+# SECTION 3: PASSWORD QUALITY
+# =============================================================================
+pwquality_checks:
+
+  - id: "NTA-PWQUAL-3.1"
+    name: "Password Complexity - Minimum Length"
+    description: "Minimum password length enforcement"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "minlen"
+    expected_value: "8"
+    comparison: ">="
+    severity: "HIGH"
+    remediation: "Set 'minlen = 8' in /etc/security/pwquality.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Complexity"
+
+  - id: "NTA-PWQUAL-3.2"
+    name: "Password Complexity - Digit Requirement"
+    description: "At least one digit must be required in passwords"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "dcredit"
+    expected_value: "-1"
+    severity: "HIGH"
+    remediation: "Set 'dcredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Complexity"
+
+  - id: "NTA-PWQUAL-3.3"
+    name: "Password Complexity - Uppercase Requirement"
+    description: "At least one uppercase letter must be required"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "ucredit"
+    expected_value: "-1"
+    severity: "HIGH"
+    remediation: "Set 'ucredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Complexity"
+
+  - id: "NTA-PWQUAL-3.4"
+    name: "Password Complexity - Lowercase Requirement"
+    description: "At least one lowercase letter must be required"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "lcredit"
+    expected_value: "-1"
+    severity: "HIGH"
+    remediation: "Set 'lcredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Complexity"
+
+  - id: "NTA-PWQUAL-3.5"
+    name: "Password Complexity - Special Character Requirement"
+    description: "At least one special character must be required"
+    file: "etc/security/pwquality.conf"
+    check_type: "parameter_set"
+    parameter: "ocredit"
+    expected_value: "-1"
+    severity: "HIGH"
+    remediation: "Set 'ocredit = -1' in /etc/security/pwquality.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Complexity"
+
+# =============================================================================
+# SECTION 4: SUDO CONFIGURATION
+# =============================================================================
+sudoers_checks:
+
+  - id: "NTA-SUDO-4.1"
+    name: "Sudo Command Logging"
+    description: "All sudo commands must be logged for audit purposes"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults logfile="
+    severity: "HIGH"
+    remediation: "Add 'Defaults logfile=\"/var/log/sudo.log\"' to /etc/sudoers"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Audit Logging"
+
+  - id: "NTA-SUDO-4.2"
+    name: "Sudo Use TTY Requirement"
+    description: "Sudo should run commands in a pseudo-terminal"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "Defaults use_pty"
+    severity: "MEDIUM"
+    remediation: "Add 'Defaults use_pty' to /etc/sudoers"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Privilege Management"
+
+  - id: "NTA-SUDO-4.3"
+    name: "Sudo Authentication Timeout"
+    description: "Sudo authentication timeout should be configured"
+    file: "etc/sudoers"
+    check_type: "contains"
+    pattern: "timestamp_timeout"
+    severity: "MEDIUM"
+    remediation: "Add 'Defaults timestamp_timeout=5' to /etc/sudoers (5 minutes or less)"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Session Management"
+
+# =============================================================================
+# SECTION 5: SSH HARDENING
+# =============================================================================
+ssh_checks:
+
+  - id: "NTA-SSH-5.1"
+    name: "SSH Protocol Version 2"
+    description: "Only SSH Protocol 2 must be used (Protocol 1 is insecure)"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "Protocol"
+    expected_value: "2"
+    severity: "CRITICAL"
+    remediation: "Set 'Protocol 2' in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Secure Protocols"
+
+  - id: "NTA-SSH-5.2"
+    name: "SSH Root Login Disabled"
+    description: "Direct root login via SSH must be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitRootLogin"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set 'PermitRootLogin no' in /etc/ssh/sshd_config and restart sshd"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Access Control"
+
+  - id: "NTA-SSH-5.3"
+    name: "SSH Password Authentication Disabled"
+    description: "Password-based SSH authentication should be disabled (use keys)"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PasswordAuthentication"
+    expected_value: "no"
+    severity: "HIGH"
+    remediation: "Set 'PasswordAuthentication no' in /etc/ssh/sshd_config after setting up SSH keys"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Strong Authentication"
+
+  - id: "NTA-SSH-5.4"
+    name: "SSH Empty Passwords Disabled"
+    description: "Empty passwords must not be permitted"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "PermitEmptyPasswords"
+    expected_value: "no"
+    severity: "CRITICAL"
+    remediation: "Set 'PermitEmptyPasswords no' in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Password Policy"
+
+  - id: "NTA-SSH-5.5"
+    name: "SSH Host-based Authentication Disabled"
+    description: "Host-based authentication should be disabled"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "HostbasedAuthentication"
+    expected_value: "no"
+    severity: "HIGH"
+    remediation: "Set 'HostbasedAuthentication no' in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Authentication Methods"
+
+  - id: "NTA-SSH-5.6"
+    name: "SSH X11 Forwarding Disabled"
+    description: "X11 forwarding should be disabled unless required"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "X11Forwarding"
+    expected_value: "no"
+    severity: "MEDIUM"
+    remediation: "Set 'X11Forwarding no' in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Service Hardening"
+
+  - id: "NTA-SSH-5.7"
+    name: "SSH MaxAuthTries Limited"
+    description: "Maximum authentication attempts should be limited"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "MaxAuthTries"
+    expected_value: "4"
+    comparison: "<="
+    severity: "HIGH"
+    remediation: "Set 'MaxAuthTries 4' or lower in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Brute Force Protection"
+
+  - id: "NTA-SSH-5.8"
+    name: "SSH LoginGraceTime Limited"
+    description: "Login grace time should be limited to prevent DoS"
+    file: "etc/ssh/sshd_config"
+    check_type: "parameter_set"
+    parameter: "LoginGraceTime"
+    expected_value: "60"
+    comparison: "<="
+    severity: "MEDIUM"
+    remediation: "Set 'LoginGraceTime 60' in /etc/ssh/sshd_config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - DoS Protection"
+
+# =============================================================================
+# SECTION 6: KERNEL SECURITY
+# =============================================================================
+sysctl_checks:
+
+  - id: "NTA-SYSCTL-6.1"
+    name: "IP Forwarding Disabled"
+    description: "IP forwarding should be disabled on non-router systems"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.ip_forward"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.ip_forward = 0' in /etc/sysctl.conf and run 'sysctl -p'"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Network Security"
+
+  - id: "NTA-SYSCTL-6.2"
+    name: "ICMP Redirects Disabled"
+    description: "ICMP redirects should be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_redirects"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.conf.all.accept_redirects = 0' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Network Hardening"
+
+  - id: "NTA-SYSCTL-6.3"
+    name: "Secure ICMP Redirects Disabled"
+    description: "Secure ICMP redirects should be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.secure_redirects"
+    expected_value: "0"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.conf.all.secure_redirects = 0' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Network Hardening"
+
+  - id: "NTA-SYSCTL-6.4"
+    name: "Source Routing Disabled"
+    description: "Source routing must be disabled"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.accept_source_route"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.conf.all.accept_source_route = 0' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Network Security"
+
+  - id: "NTA-SYSCTL-6.5"
+    name: "SYN Cookies Enabled"
+    description: "SYN cookies should be enabled to prevent SYN flood attacks"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.tcp_syncookies"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Set 'net.ipv4.tcp_syncookies = 1' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - DDoS Protection"
+
+  - id: "NTA-SYSCTL-6.6"
+    name: "Log Martian Packets"
+    description: "Martian packets should be logged for security monitoring"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.conf.all.log_martians"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.conf.all.log_martians = 1' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Security Monitoring"
+
+  - id: "NTA-SYSCTL-6.7"
+    name: "Ignore Broadcast Pings"
+    description: "Broadcast ICMP requests should be ignored"
+    file: "etc/sysctl.conf"
+    check_type: "parameter_set"
+    parameter: "net.ipv4.icmp_echo_ignore_broadcasts"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Set 'net.ipv4.icmp_echo_ignore_broadcasts = 1' in /etc/sysctl.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Network Security"
+
+# =============================================================================
+# SECTION 7: SELINUX
+# =============================================================================
+selinux_checks:
+
+  - id: "NTA-SELINUX-7.1"
+    name: "SELinux Enabled"
+    description: "SELinux must be in enforcing mode for mandatory access control"
+    file: "etc/selinux/config"
+    check_type: "parameter_set"
+    parameter: "SELINUX"
+    expected_value: "enforcing"
+    severity: "CRITICAL"
+    remediation: "Set 'SELINUX=enforcing' in /etc/selinux/config and reboot"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Mandatory Access Control"
+
+  - id: "NTA-SELINUX-7.2"
+    name: "SELinux Policy Type"
+    description: "SELinux policy type should be set to targeted"
+    file: "etc/selinux/config"
+    check_type: "parameter_set"
+    parameter: "SELINUXTYPE"
+    expected_value: "targeted"
+    severity: "HIGH"
+    remediation: "Set 'SELINUXTYPE=targeted' in /etc/selinux/config"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Security Policies"
+
+# =============================================================================
+# SECTION 8: FIREWALL
+# =============================================================================
+firewall_checks:
+
+  - id: "NTA-FIREWALL-8.1"
+    name: "Firewall Default Zone Configuration"
+    description: "Firewall public zone configuration must exist"
+    file: "etc/firewalld/zones/public.xml"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Configure firewalld with: systemctl enable --now firewalld"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Perimeter Security"
+
+  - id: "NTA-FIREWALL-8.2"
+    name: "Firewall Services Restricted"
+    description: "Only necessary services should be allowed through firewall"
+    file: "etc/firewalld/zones/public.xml"
+    check_type: "contains"
+    pattern: "<service name="
+    severity: "HIGH"
+    remediation: "Review and restrict firewall rules: firewall-cmd --list-services"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Service Minimization"
+
+# =============================================================================
+# SECTION 9: DNS
+# =============================================================================
+dns_checks:
+
+  - id: "NTA-DNS-9.1"
+    name: "DNS Servers Configured"
+    description: "DNS nameservers must be properly configured"
+    file: "etc/resolv.conf"
+    check_type: "contains"
+    pattern: "nameserver"
+    severity: "HIGH"
+    remediation: "Add 'nameserver <IP>' entries to /etc/resolv.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Name Resolution"
+
+  - id: "NTA-DNS-9.2"
+    name: "DNS Search Domain Configured"
+    description: "DNS search domain should be configured"
+    file: "etc/resolv.conf"
+    check_type: "contains"
+    pattern: "search"
+    severity: "LOW"
+    remediation: "Add 'search <domain>' to /etc/resolv.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - DNS Configuration"
+
+# =============================================================================
+# SECTION 10: AUDIT DAEMON
+# =============================================================================
+auditd_checks:
+
+  - id: "NTA-AUDIT-10.1"
+    name: "Audit Daemon Max Log File Size"
+    description: "Audit log file size should be adequate for log retention"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "max_log_file"
+    expected_value: "8"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set 'max_log_file = 8' or higher in /etc/audit/auditd.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Log Management"
+
+  - id: "NTA-AUDIT-10.2"
+    name: "Audit Log Full Action"
+    description: "Action should be taken when audit log space is low"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "space_left_action"
+    expected_value: "email"
+    severity: "HIGH"
+    remediation: "Set 'space_left_action = email' in /etc/audit/auditd.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Alert Management"
+
+  - id: "NTA-AUDIT-10.3"
+    name: "Audit Max Log Files"
+    description: "Sufficient number of audit log files for rotation"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "num_logs"
+    expected_value: "5"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set 'num_logs = 5' or higher in /etc/audit/auditd.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Log Retention"
+
+  - id: "NTA-AUDIT-10.4"
+    name: "Audit Records for Admin Actions"
+    description: "Audit log format should preserve all information"
+    file: "etc/audit/auditd.conf"
+    check_type: "parameter_set"
+    parameter: "log_format"
+    expected_value: "RAW"
+    severity: "MEDIUM"
+    remediation: "Set 'log_format = RAW' in /etc/audit/auditd.conf"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Audit Completeness"
+
+# =============================================================================
+# SECTION 11: AUDIT RULES
+# =============================================================================
+audit_rules_checks:
+
+  - id: "NTA-AUDITRULES-11.1"
+    name: "Audit Rules for File Deletions"
+    description: "File deletion events must be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "unlink"
+    severity: "HIGH"
+    remediation: "Add audit rule for unlink/unlinkat system calls"
+    nrb_reference: "NTA Cyber Byelaw 2020 - File Integrity"
+
+  - id: "NTA-AUDITRULES-11.2"
+    name: "Audit Rules for Permission Changes"
+    description: "Permission modification events must be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "chmod"
+    severity: "HIGH"
+    remediation: "Add audit rules for chmod/fchmod/fchmodat system calls"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Access Control Monitoring"
+
+  - id: "NTA-AUDITRULES-11.3"
+    name: "Audit Rules for Sudo Usage"
+    description: "All sudo command executions must be audited"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "/usr/bin/sudo"
+    severity: "CRITICAL"
+    remediation: "Add '-w /usr/bin/sudo -p x -k sudo_usage' to audit rules"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Privilege Escalation Monitoring"
+
+  - id: "NTA-AUDITRULES-11.4"
+    name: "Audit Rules Configuration Immutable"
+    description: "Audit configuration should be immutable after boot"
+    file: "etc/audit/rules.d/audit.rules"
+    check_type: "contains"
+    pattern: "-e 2"
+    severity: "HIGH"
+    remediation: "Add '-e 2' at the end of /etc/audit/rules.d/audit.rules"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Audit Protection"
+
+# =============================================================================
+# SECTION 12: SYSTEM LOGGING
+# =============================================================================
+rsyslog_checks:
+
+  - id: "NTA-RSYSLOG-12.1"
+    name: "Rsyslog Service Configuration"
+    description: "System logging must capture informational messages"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "*.info"
+    severity: "HIGH"
+    remediation: "Ensure '*.info;mail.none;authpriv.none;cron.none' is logging to /var/log/messages"
+    nrb_reference: "NTA Cyber Byelaw 2020 - System Logging"
+
+  - id: "NTA-RSYSLOG-12.2"
+    name: "Auth Log Configuration"
+    description: "Authentication and authorization logs must be captured"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "authpriv"
+    severity: "HIGH"
+    remediation: "Ensure 'authpriv.*' is logging to /var/log/secure"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Security Logging"
+
+  - id: "NTA-RSYSLOG-12.3"
+    name: "Mail Log Configuration"
+    description: "Mail system logs should be captured separately"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "mail"
+    severity: "MEDIUM"
+    remediation: "Ensure 'mail.*' is logging to /var/log/maillog"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Service Logging"
+
+  - id: "NTA-RSYSLOG-12.4"
+    name: "Cron Log Configuration"
+    description: "Cron job logs should be captured"
+    file: "etc/rsyslog.conf"
+    check_type: "contains"
+    pattern: "cron"
+    severity: "MEDIUM"
+    remediation: "Ensure 'cron.*' is logging to /var/log/cron"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Scheduled Task Monitoring"
+
+# =============================================================================
+# SECTION 13: CUSTOM FILES - PASSWORD POLICY
+# =============================================================================
+password_policy_checks:
+
+  - id: "NTA-POLICY-13.1"
+    name: "Password Policy Documentation"
+    description: "Password policy should be documented"
+    file: "password_policy.txt"
+    check_type: "file_exists"
+    severity: "MEDIUM"
+    remediation: "Create password_policy.txt with documented password requirements"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Documentation Requirements"
+
+  - id: "NTA-POLICY-13.2"
+    name: "Password Aging Policy Configured"
+    description: "Password aging policy should be documented"
+    file: "password_policy.txt"
+    check_type: "contains"
+    pattern: "MAX_DAYS"
+    severity: "MEDIUM"
+    remediation: "Document password maximum age in password_policy.txt"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Policy Documentation"
+
+# =============================================================================
+# SECTION 14: CUSTOM FILES - IPv6
+# =============================================================================
+ipv6_checks:
+
+  - id: "NTA-IPV6-14.1"
+    name: "IPv6 Status Documented"
+    description: "IPv6 configuration status should be documented"
+    file: "ipv6_status.txt"
+    check_type: "file_exists"
+    severity: "LOW"
+    remediation: "Create ipv6_status.txt documenting IPv6 enabled/disabled status"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Protocol Management"
+
+  - id: "NTA-IPV6-14.2"
+    name: "IPv6 Disabled if Not Required"
+    description: "IPv6 should be disabled if not used (attack surface reduction)"
+    file: "ipv6_status.txt"
+    check_type: "contains"
+    pattern: "disabled"
+    severity: "MEDIUM"
+    remediation: "If IPv6 not needed, disable with: sysctl -w net.ipv6.conf.all.disable_ipv6=1"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Attack Surface Reduction"
+
+# =============================================================================
+# SECTION 15: CUSTOM FILES - SERVICES
+# =============================================================================
+services_checks:
+
+  - id: "NTA-SERVICES-15.1"
+    name: "Listening Services Documented"
+    description: "All listening services must be documented and reviewed"
+    file: "listening_services.txt"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Generate with: ss -tuln > listening_services.txt"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Service Inventory"
+
+  - id: "NTA-SERVICES-15.2"
+    name: "Unnecessary Services Identified"
+    description: "Insecure services like telnet should not be listening"
+    file: "listening_services.txt"
+    check_type: "not_contains"
+    pattern: "telnet"
+    severity: "CRITICAL"
+    remediation: "Disable telnet and other insecure services: systemctl disable telnet.socket"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Service Hardening"
+
+  - id: "NTA-SERVICES-15.3"
+    name: "SSH Service Running"
+    description: "SSH service should be available for remote administration"
+    file: "listening_services.txt"
+    check_type: "contains"
+    pattern: ":22"
+    severity: "INFO"
+    remediation: "Ensure SSH is enabled: systemctl enable --now sshd"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Remote Access"
+
+# =============================================================================
+# SECTION 16: CUSTOM FILES - LICENSE
+# =============================================================================
+license_checks:
+
+  - id: "NTA-LICENSE-16.1"
+    name: "Operating System License Valid"
+    description: "OS licensing status must be documented for compliance"
+    file: "os_license_check.txt"
+    check_type: "file_exists"
+    severity: "HIGH"
+    remediation: "Document OS subscription status in os_license_check.txt"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Software Licensing"
+
+  - id: "NTA-LICENSE-16.2"
+    name: "OS Updates Available"
+    description: "System must have valid subscription for security updates"
+    file: "os_license_check.txt"
+    check_type: "contains"
+    pattern: "subscription"
+    severity: "HIGH"
+    remediation: "Register system: subscription-manager register"
+    nrb_reference: "NTA Cyber Byelaw 2020 - Patch Management"

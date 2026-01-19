@@ -1,0 +1,2981 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    Nirikshan - Main Dashboard UI
+    
+    This is the main interface for my GRC audit platform. I spent a lot of time
+    making it look professional with a clean dashboard design. It has:
+    - Navigation sidebar with all the features
+    - KPI cards showing audit statistics
+    - Forms for running online and offline audits
+    - Activity logs and report management
+    
+    Author: Me
+    Project: Nirikshan (Final Year Project)
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nirikshan - GRC Audit Platform</title>
+  <!-- Using Font Awesome for icons throughout the UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Reset default styles */
+    * {margin: 0; padding: 0; box-sizing: border-box;}
+    
+    /* Main body styling with a light gray background */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f6fa;
+      color: #2c3e50;
+    }
+    
+    /* Header with my purple gradient - I think it looks really nice */
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Nirikshan branding in the header */
+    header .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    header .brand i {
+      font-size: 28px;
+    }
+    
+    header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    header .tagline {
+      font-size: 11px;
+      opacity: 0.9;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+    
+    /* Status indicator in the top right */
+    header .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+    
+    header .status i {
+      color: #4ade80;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .container {display: flex;}
+    
+    nav {
+      width: 260px;
+      background: #fff;
+      min-height: calc(100vh - 62px);
+      padding: 20px 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    
+    nav ul {list-style: none;}
+    
+    nav li {
+      padding: 14px 20px;
+      cursor: pointer;
+      color: #4a5568;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    nav li:hover {
+      background: linear-gradient(90deg, #f7fafc 0%, #edf2f7 100%);
+      border-left-color: #667eea;
+      color: #667eea;
+      padding-left: 25px;
+    }
+    
+    nav li.active {
+      background: linear-gradient(90deg, #eef2ff 0%, #e0e7ff 100%);
+      border-left-color: #667eea;
+      color: #667eea;
+    }
+    
+    nav li i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+    
+    main {
+      flex: 1;
+      padding: 30px;
+      max-width: 1400px;
+    }
+    
+    .admin-only {display: none;}
+    
+    .page-header {
+      margin-bottom: 25px;
+    }
+    
+    .page-header h2 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .page-header p {
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #667eea;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    
+    .kpi-card.gradient-1 {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+    }
+    
+    .kpi-card.gradient-2 {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+    }
+    
+    .kpi-card.gradient-3 {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+    }
+    
+    .kpi-card.gradient-4 {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      border: none;
+    }
+    
+    .kpi-card .kpi-label {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .kpi-card .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .kpi-card .kpi-icon {
+      font-size: 24px;
+      opacity: 0.9;
+    }
+    
+    .kpi-card.active-filter {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      border: 3px solid #fff;
+      outline: 3px solid rgba(102, 126, 234, 0.5);
+    }
+    
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .panel h3 {
+      margin: 0 0 20px 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .panel h3 i {
+      color: #667eea;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    thead tr {
+      background: linear-gradient(90deg, #f7fafc 0%, #edf2f7 100%);
+    }
+    
+    th {
+      text-align: left;
+      padding: 14px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #cbd5e0;
+    }
+    
+    th i {
+      margin-right: 6px;
+      color: #667eea;
+    }
+    
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+    
+    tbody tr {
+      transition: background 0.2s;
+    }
+    
+    tbody tr:hover {
+      background: #f7fafc;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .badge-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .badge-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .badge-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .badge-primary {
+      background: #cfe2ff;
+      color: #084298;
+    }
+    
+    .status-completed {color: #28a745; font-weight: 600;}
+    .status-running {color: #ffc107; font-weight: 600;}
+    .status-failed {color: #dc3545; font-weight: 600;}
+    
+    .page {display: none;}
+    .page.active {display: block;}
+    
+    /* Form Styling */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 14px;
+    }
+    
+    form label i {
+      margin-right: 6px;
+      color: #667eea;
+    }
+    
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      background: #fff;
+    }
+    
+    form input:focus, form select:focus, form textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn {
+      padding: 11px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: #fff;
+    }
+    
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: #fff;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+    
+    form button {
+      margin-top: 10px;
+    }
+    
+    .action-btn {
+      cursor: pointer;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+      background: #eef2ff;
+      text-decoration: none;
+    }
+    
+    .btn-delete {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .btn-delete:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+    
+    .delete-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .delete-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+    
+    .delete-btn i {margin-right: 6px;}
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #a0aec0;
+    }
+    
+    .empty-state i {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h4 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #4a5568;
+    }
+    
+    .empty-state p {
+      font-size: 14px;
+    }
+    
+    /* Notification animations */
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+    <div id="navbar" style="
+    width: 100%;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    padding: 10px 30px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+">
+    <div id="userDisplay" style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500;">
+        <i class="fas fa-user-circle" style="font-size: 18px;"></i>
+        <span>Loading...</span>
+    </div>
+
+    <button onclick="logout()" style="
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        border: none;
+        padding: 8px 18px;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(231, 76, 60, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+</div>
+
+  <header>
+    <div class="brand">
+      <i class="fas fa-shield-alt"></i>
+      <div>
+        <h1>Nirikshan</h1>
+        <div class="tagline">GRC AUDIT PLATFORM</div>
+      </div>
+    </div>
+    <div class="status">
+      <i class="fas fa-circle"></i>
+      <span>Healthy • v2.0.0</span>
+    </div>
+  </header>
+  <div class="container">
+    <nav>
+      <ul>
+        <li onclick="showPage('overview')"><i class="fas fa-home"></i> Overview</li>
+        <li onclick="showPage('run')"><i class="fas fa-play-circle"></i> Run Audit</li>
+        <li onclick="showPage('offline')"><i class="fas fa-file-code"></i> Offline Config Audit</li>
+        <li onclick="showPage('batch')"><i class="fas fa-upload"></i> Batch Upload</li>
+        <li onclick="showPage('active')"><i class="fas fa-spinner"></i> Active Audits</li>
+        <li onclick="showPage('schedule')"><i class="fas fa-clock"></i> Schedule Audit</li>
+        <li onclick="showPage('reports')"><i class="fas fa-file-alt"></i> Reports</li>
+        <li onclick="showPage('compare')"><i class="fas fa-exchange-alt"></i> Compare Reports</li>
+        <li class="admin-only" onclick="showPage('users')"><i class="fas fa-users-cog"></i> Manage Users</li>
+        <li class="admin-only" onclick="showPage('activitylog')"><i class="fas fa-history"></i> Activity Log</li>
+      </ul>
+    </nav>
+    <main>
+      
+       <div id="users" class="page">
+  <div class="panel">
+    <h3><i class="fas fa-users-cog"></i> User Management</h3>
+    
+    <!-- Create User Section -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h4 style="margin-top: 0; color: #495057;"><i class="fas fa-user-plus"></i> Create New User</h4>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500;">Username:</label>
+          <input type="text" id="newUserName" placeholder="Enter username" 
+                 style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+        </div>
+        
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 500;">Password:</label>
+          <input type="password" id="newUserPassword" placeholder="Enter password"
+                 style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Role:</label>
+        <select id="newUserRole" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+          <option value="Staff">Staff</option>
+          <option value="Administrator">Administrator</option>
+        </select>
+      </div>
+
+      <button onclick="submitNewUser()" 
+              style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">
+        <i class="fas fa-plus-circle"></i> Create User
+      </button>
+
+      <p id="createUserMsg" style="margin-top: 10px; font-weight: bold;"></p>
+    </div>
+
+    <!-- User List Section -->
+    <div>
+      <h4 style="color: #495057;"><i class="fas fa-list"></i> Existing Users</h4>
+      <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+          <thead>
+              <tr style="background: #f8f9fa;">
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">
+                    <i class="fas fa-user"></i> Username
+                  </th>
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">
+                    <i class="fas fa-shield-alt"></i> Role
+                  </th>
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">
+                    <i class="fas fa-cog"></i> Actions
+                  </th>
+              </tr>
+          </thead>
+          <tbody id="userTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="activitylog" class="page">
+  <div class="panel">
+    <h3><i class="fas fa-history"></i> Activity Log</h3>
+    <p style="color: #6c757d; margin-bottom: 20px;">
+      Track all system activities including audits, user management, and administrative actions.
+    </p>
+    
+    <!-- Controls Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+      <div style="flex: 1;">
+        <input type="text" id="logSearch" placeholder="🔍 Search logs by user, action, or target..." 
+               onkeyup="filterLogs()"
+               style="width: 100%; max-width: 400px; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px;">
+      </div>
+      
+      <div style="display: flex; gap: 10px;">
+        <button onclick="refreshActivityLogs()" 
+                style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        
+        <button onclick="clearAllLogs()" 
+                style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">
+          <i class="fas fa-trash-alt"></i> Clear All Logs
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px;">
+        <div style="font-size: 12px; opacity: 0.9;">Total Activities</div>
+        <div style="font-size: 24px; font-weight: 700;" id="logStatTotal">0</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px; border-radius: 8px;">
+        <div style="font-size: 12px; opacity: 0.9;">Audits Run</div>
+        <div style="font-size: 24px; font-weight: 700;" id="logStatAudits">0</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #ffc107 0%, #ff6b6b 100%); color: white; padding: 15px; border-radius: 8px;">
+        <div style="font-size: 12px; opacity: 0.9;">User Actions</div>
+        <div style="font-size: 24px; font-weight: 700;" id="logStatUsers">0</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 15px; border-radius: 8px;">
+        <div style="font-size: 12px; opacity: 0.9;">Today's Activities</div>
+        <div style="font-size: 24px; font-weight: 700;" id="logStatToday">0</div>
+      </div>
+    </div>
+
+    <!-- Activity Log Table -->
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f8f9fa;">
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 180px;">
+              <i class="fas fa-clock"></i> Timestamp
+            </th>
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 120px;">
+              <i class="fas fa-user"></i> User
+            </th>
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 150px;">
+              <i class="fas fa-tag"></i> Action
+            </th>
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">
+              <i class="fas fa-info-circle"></i> Details
+            </th>
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; width: 100px;">
+              <i class="fas fa-circle"></i> Status
+            </th>
+          </tr>
+        </thead>
+        <tbody id="activityLogTable">
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px; color: #6c757d;">
+              <i class="fas fa-spinner fa-spin"></i> Loading activity logs...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="logCount" style="margin-top: 15px; text-align: right; color: #6c757d; font-size: 14px;">
+      Showing 0 activities
+    </div>
+  </div>
+</div>
+
+<!-- Compare Reports Page -->
+<div id="compare" class="page">
+  <div class="panel">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-exchange-alt"></i> Compare Audit Reports
+      </h3>
+      <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">
+        Compare two audit reports to identify improvements, regressions, and differences
+      </p>
+    </div>
+
+    <!-- Selection Section -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+      <!-- Report A Selection -->
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #e9ecef;">
+        <h4 style="margin-top: 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-file-alt" style="color: #667eea;"></i> Report A (Baseline)
+        </h4>
+        <select id="compareAuditA" 
+                onchange="loadAuditDetails('A')"
+                style="width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; margin-bottom: 15px;">
+          <option value="">-- Select Report A --</option>
+        </select>
+        <div id="auditDetailsA" style="font-size: 13px; color: #6c757d; min-height: 80px;">
+          <p style="text-align: center; padding: 20px;">Select a report to see details</p>
+        </div>
+      </div>
+
+      <!-- Report B Selection -->
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #e9ecef;">
+        <h4 style="margin-top: 0; color: #495057; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-file-alt" style="color: #764ba2;"></i> Report B (Comparison)
+        </h4>
+        <select id="compareAuditB" 
+                onchange="loadAuditDetails('B')"
+                style="width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; margin-bottom: 15px;">
+          <option value="">-- Select Report B --</option>
+        </select>
+        <div id="auditDetailsB" style="font-size: 13px; color: #6c757d; min-height: 80px;">
+          <p style="text-align: center; padding: 20px;">Select a report to see details</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare Button -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <button onclick="performComparison()" 
+              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+        <i class="fas fa-exchange-alt"></i> Compare Reports
+      </button>
+    </div>
+
+    <!-- Comparison Results Container -->
+    <div id="comparisonResults" style="display: none;">
+      <!-- Results will be dynamically inserted here -->
+    </div>
+  </div>
+</div>
+
+<div id="overview" class="page active">
+        <div class="page-header">
+          <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
+          <p>Monitor your security audit operations at a glance</p>
+        </div>
+        
+        <div class="kpi-row">
+          <div class="kpi-card gradient-1" onclick="filterAuditsByStatus('all')" style="cursor: pointer;" title="Click to show all audits">
+            <div class="kpi-label">Total Audits</div>
+            <div class="kpi-value">
+              <i class="fas fa-tasks kpi-icon"></i>
+              <span id="kpi-total">0</span>
+            </div>
+          </div>
+          <div class="kpi-card gradient-2" onclick="filterAuditsByStatus('running')" style="cursor: pointer;" title="Click to show running audits">
+            <div class="kpi-label">Running</div>
+            <div class="kpi-value">
+              <i class="fas fa-spinner fa-pulse kpi-icon"></i>
+              <span id="kpi-running">0</span>
+            </div>
+          </div>
+          <div class="kpi-card gradient-3" onclick="filterAuditsByStatus('completed')" style="cursor: pointer;" title="Click to show completed audits">
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-value">
+              <i class="fas fa-check-circle kpi-icon"></i>
+              <span id="kpi-completed">0</span>
+            </div>
+          </div>
+          <div class="kpi-card gradient-4" onclick="filterAuditsByStatus('failed')" style="cursor: pointer;" title="Click to show failed audits">
+            <div class="kpi-label">Failed</div>
+            <div class="kpi-value">
+              <i class="fas fa-exclamation-triangle kpi-icon"></i>
+              <span id="kpi-failed">0</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;"><i class="fas fa-history"></i> Recent Audits</h3>
+            <button onclick="clearAllAudits()" class="btn-danger admin-only" style="padding: 8px 16px; font-size: 13px;">
+              <i class="fas fa-trash-alt"></i> Clear All Audits
+            </button>
+          </div>
+          <table id="recent-audits">
+            <thead>
+              <tr>
+                <th><i class="fas fa-server"></i> Machine/Files</th>
+                <th><i class="fas fa-tag"></i> Category</th>
+                <th><i class="fas fa-desktop"></i> OS</th>
+                <th><i class="fas fa-layer-group"></i> Level</th>
+                <th><i class="fas fa-info-circle"></i> Status</th>
+                <th><i class="fas fa-clock"></i> Start Time</th>
+                <th><i class="fas fa-hourglass-half"></i> Duration</th>
+                <th><i class="fas fa-check"></i> Passed</th>
+                <th><i class="fas fa-times"></i> Failed</th>
+                <th><i class="fas fa-percentage"></i> Compliance</th>
+                <th><i class="fas fa-file-download"></i> Report</th>
+                <th class="admin-only"><i class="fas fa-cog"></i> Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="run" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-play-circle"></i> Run Single Audit</h2>
+          <p>Execute a security audit on a single target system</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-cogs"></i> Audit Configuration</h3>
+          <form id="single-audit-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i class="fas fa-network-wired"></i> IP Address</label>
+                <input type="text" name="ip" placeholder="192.168.1.10">
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" name="username" placeholder="admin">
+              </div>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-key"></i> Private Key Path</label>
+              <input type="text" name="key" placeholder="/home/user/.ssh/id_rsa">
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i class="fas fa-desktop"></i> Operating System</label>
+                <select name="os" id="os-select" onchange="toggleLevel()">
+                  <option value="Linux">Linux</option>
+                  <option value="Windows">Windows</option>
+                </select>
+              </div>
+              <div class="form-group" id="level-label">
+                <label><i class="fas fa-layer-group"></i> Audit Level</label>
+                <select name="level">
+                  <option value="L1">Level 1</option>
+                  <option value="L2">Level 2</option>
+                </select>
+              </div>
+            </div>
+            <button class="admin-only btn btn-primary" type="submit">
+              <i class="fas fa-play"></i> Run Audit
+            </button>
+          </form>
+          
+          <!-- Quick Action Buttons -->
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+            <h4 style="color: #667eea; margin-bottom: 12px; font-size: 14px;">
+              <i class="fas fa-bolt"></i> Quick Actions
+            </h4>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button onclick="showPage('overview')" class="btn" 
+                      style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; flex: 1; min-width: 180px;">
+                <i class="fas fa-chart-pie"></i> View Overview
+              </button>
+              <button onclick="showPage('active')" class="btn" 
+                      style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; flex: 1; min-width: 180px;">
+                <i class="fas fa-tasks"></i> Active Audits
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="offline" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-file-code"></i> Offline Config Audit</h2>
+          <p>Upload configuration files for offline compliance checking</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-cogs"></i> Configuration Audit Setup</h3>
+          
+          <!-- Compliance Selection with Search -->
+          <div class="form-group">
+            <label><i class="fas fa-search"></i> Search Compliance Standards</label>
+            <input type="text" id="complianceSearch" placeholder="Search for compliance standards..." 
+                   onkeyup="filterCompliances()"
+                   style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; margin-bottom: 15px;">
+          </div>
+          
+          <div class="form-group">
+            <label><i class="fas fa-shield-alt"></i> Select Compliance Standard</label>
+            <select id="offlineComplianceType" onchange="updateFileDescription()" 
+                    style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+              <option value="">-- Select Compliance Standard --</option>
+              <option value="ubuntu_sshd">CIS Ubuntu - SSH Server Configuration (sshd_config)</option>
+              <option value="nrb_rhel">NRB IT Guidelines - RHEL Configuration (tar.gz archive)</option>
+              <option value="nrb_cyber_resilience">NRB Cyber Resilience Guidelines - RHEL Configuration (tar.gz archive)</option>
+              <option value="nta_cyber_byelaw_2020">NTA Cyber Byelaw 2020 - RHEL Configuration (tar.gz archive)</option>
+              <option value="nta_firewall_opnsense">NTA Firewall Security - OPNsense/pfSense (.xml config file)</option>
+            </select>
+          </div>
+          
+          <!-- File Description -->
+          <div id="fileDescription" style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 15px 0; display: none;">
+            <h4 style="color: #667eea; margin-bottom: 8px;">
+              <i class="fas fa-info-circle"></i> Expected File Format
+            </h4>
+            <p id="fileDescText" style="color: #4a5568; font-size: 13px; line-height: 1.6;"></p>
+          </div>
+          
+          <!-- File Upload Section -->
+          <div class="form-group">
+            <label><i class="fas fa-file-upload"></i> Upload Configuration File</label>
+            <div style="position: relative;">
+              <input type="file" id="offlineConfigFile" accept=".conf,.config,.cfg,.txt,.tar.gz,.tgz,.xml,*" 
+                     onchange="displayFileName()"
+                     style="width: 100%; padding: 10px; border: 2px dashed #cbd5e0; border-radius: 8px; font-size: 14px; cursor: pointer;">
+              <div id="fileName" style="margin-top: 10px; color: #667eea; font-size: 13px; font-weight: 500;"></div>
+              <div style="margin-top: 5px; color: #6b7280; font-size: 12px;">
+                <i class="fas fa-info-circle"></i> Accepts: .conf, .cfg, .config, .txt, .xml, .tar.gz, .tgz or files without extension
+              </div>
+            </div>
+          </div>
+          
+          <!-- Target Name -->
+          <div class="form-group">
+            <label><i class="fas fa-tag"></i> Target Name (Optional)</label>
+            <input type="text" id="offlineTargetName" placeholder="e.g., Production-SSH-Server or leave blank for auto-generation"
+                   style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+          </div>
+          
+          <!-- Launch Button -->
+          <button onclick="launchOfflineAudit()" class="btn btn-primary" 
+                  style="width: 100%; padding: 12px; font-size: 16px; margin-top: 10px;">
+            <i class="fas fa-rocket"></i> Launch Offline Config Audit
+          </button>
+          
+          <div id="offlineAuditStatus" style="margin-top: 15px;"></div>
+          
+          <!-- Quick Action Buttons -->
+          <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
+            <h4 style="color: #667eea; margin-bottom: 12px; font-size: 14px;">
+              <i class="fas fa-bolt"></i> Quick Actions After Launch
+            </h4>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button onclick="showPage('overview')" class="btn" 
+                      style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; flex: 1; min-width: 180px;">
+                <i class="fas fa-chart-pie"></i> View Overview
+              </button>
+              <button onclick="showPage('active')" class="btn" 
+                      style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; flex: 1; min-width: 180px;">
+                <i class="fas fa-tasks"></i> Active Audits
+              </button>
+            </div>
+            <p style="margin-top: 10px; color: #6b7280; font-size: 12px;">
+              <i class="fas fa-info-circle"></i> After launching an audit, use these buttons to quickly check progress and view reports.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Info Panel -->
+        <div class="panel" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+          <h3><i class="fas fa-question-circle"></i> About Offline Config Audit</h3>
+          <div style="color: #4a5568; font-size: 14px; line-height: 1.8;">
+            <p style="margin-bottom: 12px;">
+              <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+              <strong>Offline Config Audit</strong> allows you to check configuration files against security compliance standards without requiring live system access.
+            </p>
+            <p style="margin-bottom: 12px;">
+              <i class="fas fa-shield-alt" style="color: #667eea;"></i> 
+              Perfect for analyzing configurations from systems in isolated networks or testing configurations before deployment.
+            </p>
+            <p style="margin-bottom: 12px;">
+              <i class="fas fa-file-alt" style="color: #f59e0b;"></i> 
+              Simply upload your configuration file, select the appropriate compliance standard, and launch the audit.
+            </p>
+            <p>
+              <i class="fas fa-chart-bar" style="color: #8b5cf6;"></i> 
+              Results will appear in <strong>Active Audits</strong> and <strong>Overview</strong>, and you can generate reports just like regular audits.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="batch" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-upload"></i> Batch Upload Targets</h2>
+          <p>Upload a file containing multiple targets for batch auditing</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-file-upload"></i> Upload Configuration</h3>
+          <form id="batch-form">
+            <div class="form-group">
+              <label><i class="fas fa-file-alt"></i> Targets File</label>
+              <input type="file" name="file" accept=".txt">
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-users"></i> Max Workers</label>
+              <input type="number" name="workers" min="1" max="10" value="3" placeholder="Number of concurrent workers">
+            </div>
+            <button class="admin-only btn btn-primary" type="submit">
+              <i class="fas fa-cloud-upload-alt"></i> Upload & Run
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="active" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-spinner"></i> Active Audits</h2>
+          <p>Monitor currently running security audits in real-time</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-tasks"></i> Running Audits</h3>
+          <div id="active-audits">
+            <div class="empty-state">
+              <i class="fas fa-clipboard-check"></i>
+              <h4>No Active Audits</h4>
+              <p>There are no audits currently running</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="schedule" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-clock"></i> Schedule Audit</h2>
+          <p>Schedule security audits for future execution</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-calendar-plus"></i> Create Schedule</h3>
+          <form id="schedule-form">
+            <div class="form-group">
+              <label><i class="fas fa-file-alt"></i> Target File</label>
+              <input type="file" name="file" accept=".txt">
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i class="fas fa-calendar"></i> Select Date</label>
+                <input type="date" name="date">
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-clock"></i> Select Time</label>
+                <input type="time" name="time">
+              </div>
+            </div>
+            <button class="admin-only btn btn-primary" type="submit">
+              <i class="fas fa-calendar-check"></i> Schedule
+            </button>
+          </form>
+          <p style="margin-top: 15px; color: #718096; font-size: 13px;">
+            <i class="fas fa-info-circle"></i> Choose a date and time when the audit should run. The system will handle the scheduling automatically.
+          </p>
+        </div>
+        <div class="panel">
+          <h3><i class="fas fa-list-alt"></i> Next Scheduled Audits</h3>
+          <table id="scheduled-audits">
+            <thead>
+              <tr>
+                <th><i class="fas fa-file"></i> Target File</th>
+                <th><i class="fas fa-calendar-day"></i> Date</th>
+                <th><i class="fas fa-clock"></i> Time</th>
+                <th><i class="fas fa-cog"></i> Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state" style="padding: 40px 20px;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px;"></i>
+                    <h4>No Scheduled Audits</h4>
+                    <p>There are no audits scheduled for future execution</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="reports" class="page">
+        <div class="page-header">
+          <h2><i class="fas fa-file-alt"></i> Reports</h2>
+          <p>View and download all generated audit reports</p>
+        </div>
+        
+        <div class="panel">
+          <h3><i class="fas fa-folder-open"></i> All Reports</h3>
+          <table id="reports-table">
+            <thead>
+              <tr>
+                <th><i class="fas fa-server"></i> Machine/Files</th>
+                <th><i class="fas fa-tag"></i> Category</th>
+                <th><i class="fas fa-desktop"></i> OS</th>
+                <th><i class="fas fa-info-circle"></i> Status</th>
+                <th><i class="fas fa-percentage"></i> Compliance</th>
+                <th><i class="fas fa-file-download"></i> Report</th>
+                <th class="admin-only"><i class="fas fa-cog"></i> Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Variable to store user role globally after fetch
+    let userRole = 'Staff'; 
+    
+    // Enhanced page navigation
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+
+        window.currentPage = id;
+        
+        // Refresh data when showing certain pages
+        if (id === 'schedule') {
+            refreshScheduledAudits();
+        } else if (id === 'active') {
+            refreshActiveAudits();
+        }
+            else if (id === 'users') {
+            loadUsersUI();
+        }
+            else if (id === 'activitylog') {
+            refreshActivityLogs();
+        }
+
+    }
+
+    function toggleLevel() {
+        const os = document.getElementById('os-select').value;
+        document.getElementById('level-label').style.display = (os === 'Linux') ? 'block' : 'none';
+    }
+
+    // Enhanced audit data refresh
+    async function refreshRecentAudits() {
+        try {
+            const res = await fetch('/api/audits/active');
+            if (!res.ok) throw new Error('Failed to fetch audits');
+            
+            const data = await res.json();
+            const tbody = document.querySelector('#recent-audits tbody');
+            const reportsTbody = document.querySelector('#reports-table tbody');
+            tbody.innerHTML = '';
+            reportsTbody.innerHTML = '';
+
+            let total = 0, running = 0, completed = 0, failed = 0;
+
+            data.audits.forEach(a => {
+                total++;
+                if (a.status === 'running') running++;
+                else if (a.status === 'completed') completed++;
+                else if (a.status === 'failed') failed++;
+
+                let passed = a.summary?.passed || 0;
+                let failedChecks = a.summary?.failed || 0;
+                let warnings = a.summary?.warnings || 0;
+                let totalChecks = a.summary?.total || 0;
+                
+                // Calculate compliance percentage correctly
+                // For offline audits: use total_checks (includes warnings)
+                // For online audits: use passed + failed
+                let compliance;
+                if (totalChecks > 0) {
+                    // Use total_checks if available (more accurate for offline audits)
+                    compliance = Math.round((passed / totalChecks) * 100);
+                } else if ((passed + failedChecks) > 0) {
+                    // Fallback for older audits without total_checks
+                    compliance = Math.round((passed / (passed + failedChecks)) * 100);
+                } else {
+                    compliance = 0;
+                }
+
+                const statusClass = `status-${a.status}`;
+                
+                // Check if this is an offline config audit
+                const isOffline = a.os === 'offline_config' || a.os === 'Offline_Config' || a.is_offline;
+                const osDisplay = isOffline ? '<span style="display: inline-block; background: #f59e0b; color: white; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap;"><i class="fas fa-file-code"></i> OFFLINE</span>' : (a.os || '');
+                const levelDisplay = isOffline ? a.level : (a.level || '');
+                const categoryDisplay = a.category || (isOffline ? 'Offline Config Audit' : 'Online Machine Audit');
+                
+                // Create category badge
+                const categoryBadge = isOffline ? 
+                    '<span style="display: inline-block; background: #8b5cf6; color: white; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap;"><i class="fas fa-file-code"></i> Offline Config</span>' :
+                    '<span style="display: inline-block; background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap;"><i class="fas fa-network-wired"></i> Online Machine</span>';
+                
+                const reportLinks = a.status === 'completed' ? `
+                    <a href="/api/audit/${a.id}/report" target="_blank" style="color: #007bff; text-decoration: none;">
+                        <i class="fas fa-file-code"></i> HTML
+                    </a> |
+                    <a href="javascript:void(0)" onclick="previewPDF('${a.id}')" style="color: #007bff; text-decoration: none;">
+                        <i class="fas fa-file-pdf"></i> PDF Preview
+                    </a>` : 
+                    '<span style="color: #6c757d;">N/A</span>';
+
+                // Reports table row
+                const trReports = document.createElement('tr');
+                const deleteReportBtn = userRole === 'Administrator' ? `
+                    <td>
+                        <button onclick="deleteAudit('${a.id}')" class="btn-delete" title="Delete Report">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>` : '';
+                
+                trReports.innerHTML = `
+                    <td>${a.target || ''}</td>
+                    <td>${categoryBadge}</td>
+                    <td>${osDisplay}</td>
+                    <td><span class="${statusClass}">${a.status.toUpperCase()}</span></td>
+                    <td><strong>${compliance}%</strong></td>
+                    <td>${reportLinks}</td>
+                    ${deleteReportBtn}`;
+                reportsTbody.appendChild(trReports);
+
+                // Overview table row
+                const trOverview = document.createElement('tr');
+                const deleteBtn = userRole === 'Administrator' ? `
+                    <td>
+                        <button onclick="deleteAudit('${a.id}')" class="btn-delete" title="Delete Audit">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>` : '';
+                
+                trOverview.innerHTML = `
+                    <td>${a.target || ''}</td>
+                    <td>${categoryBadge}</td>
+                    <td>${osDisplay}</td>
+                    <td>${levelDisplay}</td>
+                    <td><span class="${statusClass}">${a.status.toUpperCase()}</span></td>
+                    <td>${a.start_time || ''}</td>
+                    <td>${a.duration || ''}</td>
+                    <td style="color: #28a745; font-weight: 500;">${passed}</td>
+                    <td style="color: #dc3545; font-weight: 500;">${failedChecks}</td>
+                    <td><strong>${compliance}%</strong></td>
+                    <td>${reportLinks}</td>
+                    ${deleteBtn}`;
+                tbody.appendChild(trOverview);
+            });
+
+            // Update KPI cards
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-running').innerText = running;
+            document.getElementById('kpi-completed').innerText = completed;
+            document.getElementById('kpi-failed').innerText = failed;
+            
+            // Re-apply current filter if one is active
+            if (currentFilter && currentFilter !== 'all') {
+                filterAuditsByStatus(currentFilter);
+            }
+
+        } catch (error) {
+            console.error('Error refreshing audit data:', error);
+        }
+    }
+
+    // Function to refresh active audits
+    async function refreshActiveAudits() {
+        try {
+            const res = await fetch('/api/audits/active');
+            if (!res.ok) throw new Error('Failed to fetch active audits');
+            
+            const data = await res.json();
+            const activeDiv = document.getElementById('active-audits');
+            
+            const runningAudits = data.audits.filter(a => a.status === 'running');
+            
+            if (runningAudits.length === 0) {
+                activeDiv.innerHTML = '<p style="text-align: center; color: #6c757d; font-style: italic;">No active audits currently running.</p>';
+                return;
+            }
+
+            let html = '<div style="display: grid; gap: 15px;">';
+            runningAudits.forEach(audit => {
+                const isOffline = audit.os === 'offline_config' || audit.os === 'Offline_Config';
+                const auditTypeBadge = isOffline ? '<span style="display: inline-block; background: #f59e0b; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; white-space: nowrap;"><i class="fas fa-file-code"></i> OFFLINE</span>' : '';
+                const osDisplay = isOffline ? 'Offline Config Audit' : audit.os;
+                
+                html += `
+                <div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #495057;">${audit.target}${auditTypeBadge}</h4>
+                            <p style="margin: 0; color: #6c757d; font-size: 0.9em;">
+                                ${osDisplay} ${audit.level && !isOffline ? '• ' + audit.level : ''} • Started: ${audit.start_time || 'Unknown'}
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 500;">
+                                ⏳ RUNNING
+                            </span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div style="height: 4px; background: #e9ecef; border-radius: 2px; overflow: hidden;">
+                            <div style="height: 100%; background: linear-gradient(90deg, #ffc107, #fd7e14); width: 60%; animation: progress 2s ease-in-out infinite;"></div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            activeDiv.innerHTML = html;
+        } catch (error) {
+            console.error('Error refreshing active audits:', error);
+            document.getElementById('active-audits').innerHTML = '<p style="color: #dc3545;">Error loading active audits.</p>';
+        }
+    }
+
+    // Global variable to track current filter
+    let currentFilter = 'all';
+
+    // Function to filter audits by status
+    function filterAuditsByStatus(status) {
+        currentFilter = status;
+        
+        // Remove active-filter class from all KPI cards
+        document.querySelectorAll('.kpi-card').forEach(card => {
+            card.classList.remove('active-filter');
+        });
+        
+        // Add active-filter class to clicked card
+        if (status === 'all') {
+            document.querySelector('.kpi-card.gradient-1').classList.add('active-filter');
+        } else if (status === 'running') {
+            document.querySelector('.kpi-card.gradient-2').classList.add('active-filter');
+        } else if (status === 'completed') {
+            document.querySelector('.kpi-card.gradient-3').classList.add('active-filter');
+        } else if (status === 'failed') {
+            document.querySelector('.kpi-card.gradient-4').classList.add('active-filter');
+        }
+        
+        // Get all table rows from both overview and reports tables
+        const overviewRows = document.querySelectorAll('#recent-audits tbody tr');
+        const reportRows = document.querySelectorAll('#reports-table tbody tr');
+        
+        // Filter overview table
+        overviewRows.forEach(row => {
+            const statusCell = row.cells[4]; // Status is in the 5th column (index 4)
+            if (!statusCell) return;
+            
+            const rowStatus = statusCell.textContent.toLowerCase().trim();
+            
+            if (status === 'all') {
+                row.style.display = '';
+            } else {
+                // Show row if status matches
+                if (rowStatus === status.toLowerCase()) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Filter reports table
+        reportRows.forEach(row => {
+            const statusCell = row.cells[3]; // Status is in the 4th column (index 3) in reports table
+            if (!statusCell) return;
+            
+            const rowStatus = statusCell.textContent.toLowerCase().trim();
+            
+            if (status === 'all') {
+                row.style.display = '';
+            } else {
+                if (rowStatus === status.toLowerCase()) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Update table visibility message if no results
+        updateFilterMessage(status, overviewRows, reportRows);
+    }
+
+    // Function to show filter message if no results
+    function updateFilterMessage(status, overviewRows, reportRows) {
+        // Count visible rows in overview
+        let visibleOverviewRows = 0;
+        overviewRows.forEach(row => {
+            if (row.style.display !== 'none') visibleOverviewRows++;
+        });
+        
+        // Show/hide no results message for overview
+        let overviewTable = document.querySelector('#recent-audits');
+        let existingMsg = overviewTable.parentElement.querySelector('.filter-message');
+        
+        if (visibleOverviewRows === 0 && status !== 'all') {
+            if (!existingMsg) {
+                let msg = document.createElement('p');
+                msg.className = 'filter-message';
+                msg.style.cssText = 'text-align: center; color: #6c757d; font-style: italic; padding: 20px;';
+                msg.textContent = `No ${status} audits found.`;
+                overviewTable.parentElement.insertBefore(msg, overviewTable.nextSibling);
+            }
+        } else {
+            if (existingMsg) existingMsg.remove();
+        }
+    }
+
+    // Handle single audit form submission
+    document.getElementById('single-audit-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Starting...';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+        const data = {
+            ip: formData.get('ip'),
+            username: formData.get('username'),
+            key: formData.get('key'),
+            os: formData.get('os'),
+            level: formData.get('level')
+        };
+
+        try {
+            const response = await fetch('/api/audit/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Show enhanced success message with action button
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); z-index: 10000; max-width: 400px; animation: slideIn 0.3s ease-out;';
+                successMsg.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 15px;">
+                        <i class="fas fa-check-circle" style="font-size: 24px; margin-top: 2px;"></i>
+                        <div style="flex: 1;">
+                            <strong style="font-size: 16px; display: block; margin-bottom: 8px;">Audit Started Successfully!</strong>
+                            <div style="font-size: 13px; margin-bottom: 12px; opacity: 0.95;">
+                                Target: <strong>${data.ip}</strong><br>
+                                Audit ID: <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px;">${result.audit.id}</code>
+                            </div>
+                            <button onclick="showPage('overview'); this.parentElement.parentElement.parentElement.remove();" 
+                                    style="background: white; color: #10b981; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 6px;">
+                                <i class="fas fa-chart-pie"></i> View Overview
+                            </button>
+                            <button onclick="showPage('active'); this.parentElement.parentElement.parentElement.remove();" 
+                                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%;">
+                                <i class="fas fa-tasks"></i> Monitor Progress
+                            </button>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" 
+                                style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.8; padding: 0; width: 24px; height: 24px;">
+                            ×
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(successMsg);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (successMsg.parentElement) {
+                        successMsg.style.animation = 'slideOut 0.3s ease-out';
+                        setTimeout(() => successMsg.remove(), 300);
+                    }
+                }, 10000);
+                
+                this.reset();
+                refreshRecentAudits();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Unknown error occurred'));
+            }
+        } catch (error) {
+            console.error('Error starting audit:', error);
+            alert('❌ Error starting audit: ' + error.message);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Handle batch form submission
+    document.getElementById('batch-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Uploading...';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/api/audit/batch', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`✅ Batch upload successful!\n\nFile: ${result.batch_file}\nAudits Created: ${result.total_created}\n\nAll audits are now running in the background.`);
+                this.reset();
+                refreshRecentAudits();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Unknown error occurred'));
+            }
+        } catch (error) {
+            console.error('Error uploading batch:', error);
+            alert('❌ Error uploading batch: ' + error.message);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Handle schedule form submission
+    document.getElementById('schedule-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Scheduling...';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/api/schedule', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                const scheduleTime = `${formData.get('date')} at ${formData.get('time')}`;
+                alert(`✅ Audit scheduled successfully!\n\nScheduled for: ${scheduleTime}\nTarget: ${result.created.target}`);
+                this.reset();
+                refreshScheduledAudits();
+            } else {
+                alert('❌ Error: ' + (result.error || 'Unknown error occurred'));
+            }
+        } catch (error) {
+            console.error('Error scheduling audit:', error);
+            alert('❌ Error scheduling audit: ' + error.message);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Function to refresh scheduled audits
+    async function refreshScheduledAudits() {
+        try {
+            const res = await fetch('/api/schedule');
+            if (!res.ok) throw new Error('Failed to fetch schedules');
+            
+            const data = await res.json();
+            const tbody = document.querySelector('#scheduled-audits tbody');
+            tbody.innerHTML = '';
+
+            if (data.schedules && data.schedules.length > 0) {
+                data.schedules.forEach(schedule => {
+                    const tr = document.createElement('tr');
+                    const scheduleDateTime = new Date(`${schedule.date}T${schedule.time}`);
+                    const isUpcoming = scheduleDateTime > new Date();
+                    
+                    tr.innerHTML = `
+                        <td>${schedule.target}</td>
+                        <td>${schedule.date}</td>
+                        <td>${schedule.time}</td>
+                        <td>
+                            ${isUpcoming ? 
+                                `<span class="action-btn" onclick="editScheduled('${schedule.id}')" style="color: #007bff;">Edit</span>
+                                <span class="action-btn" onclick="deleteScheduled('${schedule.id}')" style="color: #dc3545;">Delete</span>` :
+                                '<span style="color: #6c757d;">Past</span>'
+                            }
+                        </td>`;
+                    
+                    // Style past schedules differently
+                    if (!isUpcoming) {
+                        tr.style.opacity = '0.6';
+                        tr.style.fontStyle = 'italic';
+                    }
+                    
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #6c757d; font-style: italic;">No scheduled audits.</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error refreshing scheduled audits:', error);
+            const tbody = document.querySelector('#scheduled-audits tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #dc3545;">Error loading scheduled audits.</td></tr>';
+        }
+    }
+
+    // Enhanced delete function for scheduled audits
+    async function deleteScheduled(scheduleId) {
+        if (confirm('Are you sure you want to delete this scheduled audit?')) {
+            try {
+                const response = await fetch(`/api/schedule/${scheduleId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                if (result.deleted) {
+                    alert('✅ Scheduled audit deleted successfully.');
+                    refreshScheduledAudits();
+                } else {
+                    alert('❌ Error deleting schedule');
+                }
+            } catch (error) {
+                console.error('Error deleting schedule:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+    }
+
+    // Placeholder function for edit (you can enhance this)
+    function editScheduled(scheduleId) {
+        alert('Edit functionality not yet implemented. You can delete and recreate the schedule.');
+    }
+
+    // Auto-refresh functionality
+    function startAutoRefresh() {
+        // Refresh every 5 seconds
+        setInterval(refreshRecentAudits, 5000);
+        
+        // Refresh active audits more frequently if on active page
+        setInterval(() => {
+            const activePage = document.querySelector('.page.active');
+            if (activePage && activePage.id === 'active') {
+                refreshActiveAudits();
+            }
+        }, 3000);
+    }
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial data load
+        refreshRecentAudits();
+        
+        // Start auto-refresh
+        startAutoRefresh();
+        
+        console.log('CIS Security Auditor UI initialized');
+    });
+
+    // Add some CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes progress {
+            0%, 100% { width: 30%; }
+            50% { width: 70%; }
+        }
+        
+        .status-completed { color: #28a745 !important; font-weight: 600; }
+        .status-running { color: #ffc107 !important; font-weight: 600; }
+        .status-failed { color: #dc3545 !important; font-weight: 600; }
+        .status-pending { color: #6c757d !important; font-weight: 600; }
+        
+        .action-btn:hover {
+            text-decoration: underline !important;
+            opacity: 0.8;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    `;
+    document.head.appendChild(style);
+    // --- User Management functions (Admin Only) ---
+    async function loadUsersUI() {
+        try {
+            const res = await fetch("/api/users");
+            if (!res.ok) {
+                console.error("Failed to fetch users:", res.status);
+                return;
+            }
+            const users = await res.json();
+
+            const table = document.getElementById("userTable");
+            table.innerHTML = "";
+
+            users.forEach(user => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td style="padding:12px;">${user.username}</td>
+                    <td style="padding:12px;"><span style="background:#e9ecef; padding:4px 12px; border-radius:12px; font-size:13px; font-weight:500;">${user.role}</span></td>
+                    <td style="padding:12px;">
+                        <button class="delete-btn" onclick="deleteUserUI('${user.username}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+
+                table.appendChild(row);
+            });
+            // Re-apply admin visibility after loading users
+            setAdminVisibility(userRole);
+
+        } catch (error) {
+            console.log("Error loading users:", error);
+        }
+    }
+
+    async function deleteUserUI(username) {
+        if (!confirm(`Are you sure you want to delete user: ${username}?`)) return;
+
+        try {
+            const response = await fetch("/api/delete-user", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username})
+            });
+
+            const result = await response.json();
+
+            alert(result.message);
+
+            // reload table
+            loadUsersUI();
+        } catch (err) {
+            console.error("Delete failed:", err);
+            alert("Error deleting user");
+        }
+    }
+    // --- end user management functions ---
+
+    // --- Activity Log Functions ---
+    let allActivityLogs = []; // Store all logs for filtering
+
+    async function refreshActivityLogs() {
+        try {
+            const response = await fetch("/api/activity-logs");
+            const data = await response.json();
+            
+            if (data.success) {
+                allActivityLogs = data.logs || [];
+                displayActivityLogs(allActivityLogs);
+                updateLogStatistics(allActivityLogs);
+            } else {
+                console.error("Failed to load activity logs");
+                document.getElementById("activityLogTable").innerHTML = `
+                    <tr><td colspan="5" style="text-align: center; padding: 20px; color: #dc3545;">
+                        <i class="fas fa-exclamation-triangle"></i> Failed to load activity logs
+                    </td></tr>
+                `;
+            }
+        } catch (error) {
+            console.error("Error loading activity logs:", error);
+            document.getElementById("activityLogTable").innerHTML = `
+                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #dc3545;">
+                    <i class="fas fa-exclamation-triangle"></i> Error loading activity logs
+                </td></tr>
+            `;
+        }
+    }
+
+    function displayActivityLogs(logs) {
+        const table = document.getElementById("activityLogTable");
+        
+        if (!logs || logs.length === 0) {
+            table.innerHTML = `
+                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #6c757d;">
+                    <i class="fas fa-inbox"></i> No activity logs found
+                </td></tr>
+            `;
+            document.getElementById("logCount").textContent = "Showing 0 activities";
+            return;
+        }
+
+        // Sort logs by timestamp (newest first)
+        logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        table.innerHTML = logs.map(log => {
+            const date = new Date(log.timestamp);
+            const formattedDate = date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            // Determine action badge color
+            let actionColor = '#6c757d';
+            if (log.action.includes('Login') || log.action.includes('Logout')) actionColor = '#17a2b8';
+            else if (log.action.includes('Audit')) actionColor = '#28a745';
+            else if (log.action.includes('Created') || log.action.includes('Register')) actionColor = '#20c997';
+            else if (log.action.includes('Deleted')) actionColor = '#dc3545';
+            else if (log.action.includes('Failed') || log.action.includes('Error')) actionColor = '#ffc107';
+
+            // Determine status badge
+            let statusBadge = '';
+            if (log.status === 'success') {
+                statusBadge = '<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">✓ Success</span>';
+            } else if (log.status === 'failed') {
+                statusBadge = '<span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">✗ Failed</span>';
+            } else {
+                statusBadge = '<span style="background: #e2e3e5; color: #383d41; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">• Info</span>';
+            }
+
+            return `
+                <tr style="border-bottom: 1px solid #dee2e6; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'">
+                    <td style="padding: 12px; font-size: 13px;">${formattedDate}</td>
+                    <td style="padding: 12px;">
+                        <span style="background: #e9ecef; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+                            <i class="fas fa-user-circle"></i> ${log.user || 'System'}
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">
+                        <span style="background: ${actionColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;">
+                            ${log.action}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; font-size: 13px; color: #495057;">${log.details || 'N/A'}</td>
+                    <td style="padding: 12px;">${statusBadge}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById("logCount").textContent = `Showing ${logs.length} activities`;
+    }
+
+    function updateLogStatistics(logs) {
+        const total = logs.length;
+        const audits = logs.filter(log => log.action.includes('Audit')).length;
+        const userActions = logs.filter(log => 
+            log.action.includes('Created') || 
+            log.action.includes('Deleted') || 
+            log.action.includes('Register')
+        ).length;
+        
+        // Count today's activities
+        const today = new Date().toDateString();
+        const todayCount = logs.filter(log => 
+            new Date(log.timestamp).toDateString() === today
+        ).length;
+
+        document.getElementById("logStatTotal").textContent = total;
+        document.getElementById("logStatAudits").textContent = audits;
+        document.getElementById("logStatUsers").textContent = userActions;
+        document.getElementById("logStatToday").textContent = todayCount;
+    }
+
+    function filterLogs() {
+        const searchTerm = document.getElementById("logSearch").value.toLowerCase();
+        
+        if (!searchTerm) {
+            displayActivityLogs(allActivityLogs);
+            return;
+        }
+
+        const filtered = allActivityLogs.filter(log => 
+            (log.user && log.user.toLowerCase().includes(searchTerm)) ||
+            (log.action && log.action.toLowerCase().includes(searchTerm)) ||
+            (log.details && log.details.toLowerCase().includes(searchTerm))
+        );
+
+        displayActivityLogs(filtered);
+    }
+
+    async function clearAllLogs() {
+        if (!confirm('⚠️ WARNING: This will permanently delete ALL activity logs. This action cannot be undone.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+
+        // Double confirmation for critical action
+        if (!confirm('Are you ABSOLUTELY sure? Type YES to confirm in the next dialog.')) {
+            return;
+        }
+
+        const confirmation = prompt('Type "DELETE" to confirm clearing all logs:');
+        if (confirmation !== 'DELETE') {
+            alert('Log deletion cancelled. You must type DELETE exactly.');
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/activity-logs/clear", {
+                method: "DELETE",
+                headers: {"Content-Type": "application/json"}
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ All activity logs have been cleared successfully.');
+                refreshActivityLogs();
+            } else {
+                alert('✗ Failed to clear logs: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error("Error clearing logs:", error);
+            alert('✗ Error clearing activity logs. Please try again.');
+        }
+    }
+    // --- End Activity Log Functions ---
+
+    // --- Audit Delete Functions ---
+    async function deleteAudit(auditId) {
+        if (!confirm('⚠️ Are you sure you want to delete this audit and its reports?\n\nThis action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/audit/${auditId}/delete`, {
+                method: "DELETE",
+                headers: {"Content-Type": "application/json"}
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ Audit deleted successfully.');
+                refreshDashboard();
+            } else {
+                alert('✗ Failed to delete audit: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error("Error deleting audit:", error);
+            alert('✗ Error deleting audit. Please try again.');
+        }
+    }
+
+    async function clearAllAudits() {
+        if (!confirm('⚠️ WARNING: This will permanently delete ALL audits and reports. This action cannot be undone.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+
+        // Double confirmation for critical action
+        if (!confirm('Are you ABSOLUTELY sure? Type YES to confirm in the next dialog.')) {
+            return;
+        }
+
+        const confirmation = prompt('Type "DELETE" to confirm clearing all audits:');
+        if (confirmation !== 'DELETE') {
+            alert('Audit deletion cancelled. You must type DELETE exactly.');
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/audits/clear", {
+                method: "DELETE",
+                headers: {"Content-Type": "application/json"}
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✓ All audits and reports have been cleared successfully.');
+                refreshDashboard();
+            } else {
+                alert('✗ Failed to clear audits: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error("Error clearing audits:", error);
+            alert('✗ Error clearing audits. Please try again.');
+        }
+    }
+    // --- End Audit Delete Functions ---
+
+    // --- Offline Config Audit Functions ---
+    function filterCompliances() {
+        const searchValue = document.getElementById('complianceSearch').value.toLowerCase();
+        const select = document.getElementById('offlineComplianceType');
+        const options = select.getElementsByTagName('option');
+        
+        for (let i = 1; i < options.length; i++) {
+            const optionText = options[i].text.toLowerCase();
+            if (optionText.includes(searchValue)) {
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    }
+
+    function updateFileDescription() {
+        const complianceType = document.getElementById('offlineComplianceType').value;
+        const descDiv = document.getElementById('fileDescription');
+        const descText = document.getElementById('fileDescText');
+        const fileInput = document.getElementById('offlineConfigFile');
+        
+        if (complianceType === 'ubuntu_sshd') {
+            descText.innerHTML = `
+                <strong>Upload your SSH daemon configuration file (sshd_config)</strong><br>
+                • Typical location: <code>/etc/ssh/sshd_config</code><br>
+                • Expected format: Standard OpenSSH configuration file<br>
+                • Will check against: CIS Ubuntu SSH Server Benchmark controls<br>
+                • Example checks: Protocol version, PermitRootLogin, PasswordAuthentication, etc.
+            `;
+            descDiv.style.display = 'block';
+            // Update file input to accept text config files
+            fileInput.setAttribute('accept', '.conf,.config,.cfg,.txt,*');
+        } else if (complianceType === 'nrb_rhel') {
+            descText.innerHTML = `
+                <strong>Upload a tar.gz archive containing RHEL configuration files</strong><br>
+                • Expected format: <code>.tar.gz</code> or <code>.tgz</code> archive<br>
+                • Will check against: <strong>Nepal Rastra Bank (NRB) IT Guidelines</strong><br>
+                • <strong>Required files in the archive:</strong><br>
+                <div style="margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                    • <code>etc/pam.d/system-auth</code> - PAM authentication configuration<br>
+                    • <code>etc/pam.d/password-auth</code> - PAM password authentication<br>
+                    • <code>etc/login.defs</code> - Login and password policies<br>
+                    • <code>etc/ssh/sshd_config</code> - SSH server configuration<br>
+                    • <code>etc/sudoers</code> - Sudo privileges configuration<br>
+                    • <code>etc/sysctl.conf</code> - Kernel parameters<br>
+                    • <code>etc/selinux/config</code> - SELinux configuration<br>
+                    • <code>etc/audit/auditd.conf</code> - Audit daemon configuration<br>
+                    • <code>etc/audit/rules.d/audit.rules</code> - Audit rules<br>
+                    • <code>etc/rsyslog.conf</code> - System logging configuration<br>
+                    • <code>etc/logrotate.conf</code> - Log rotation configuration<br>
+                    • <code>os-release.txt</code> - Operating system information<br>
+                    • <code>users-list.txt</code> - System users list<br>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-left: 3px solid #2196F3; font-size: 0.9em;">
+                    <strong>💡 How to create the archive:</strong><br>
+                    Run these commands on your RHEL server:<br>
+                    <code style="display: block; margin-top: 5px; padding: 5px; background: white;">
+                    mkdir -p nrb-config/etc/{pam.d,ssh,audit/rules.d}<br>
+                    cp /etc/pam.d/system-auth nrb-config/etc/pam.d/<br>
+                    cp /etc/pam.d/password-auth nrb-config/etc/pam.d/<br>
+                    cp /etc/login.defs nrb-config/etc/<br>
+                    cp /etc/ssh/sshd_config nrb-config/etc/ssh/<br>
+                    cp /etc/sudoers nrb-config/etc/<br>
+                    cp /etc/sysctl.conf nrb-config/etc/<br>
+                    cp /etc/selinux/config nrb-config/etc/selinux/<br>
+                    cp /etc/audit/auditd.conf nrb-config/etc/audit/<br>
+                    cp /etc/audit/rules.d/audit.rules nrb-config/etc/audit/rules.d/<br>
+                    cp /etc/rsyslog.conf nrb-config/etc/<br>
+                    cp /etc/logrotate.conf nrb-config/etc/<br>
+                    cat /etc/os-release > nrb-config/os-release.txt<br>
+                    cat /etc/passwd > nrb-config/users-list.txt<br>
+                    tar -czf nrb-config.tar.gz -C nrb-config .
+                    </code>
+                </div>
+            `;
+            descDiv.style.display = 'block';
+            // Update file input to accept tar.gz archives
+            fileInput.setAttribute('accept', '.tar.gz,.tgz,.tar');
+        } else if (complianceType === 'nrb_cyber_resilience') {
+            descText.innerHTML = `
+                <strong>Upload a tar.gz archive containing RHEL configuration files</strong><br>
+                • Expected format: <code>.tar.gz</code> or <code>.tgz</code> archive<br>
+                • Will check against: <strong>Nepal Rastra Bank (NRB) Cyber Resilience Guidelines</strong><br>
+                • <strong>Required files in the archive:</strong><br>
+                <div style="margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                    • <code>etc/pam.d/system-auth</code> - PAM authentication configuration<br>
+                    • <code>etc/pam.d/password-auth</code> - PAM password authentication<br>
+                    • <code>etc/login.defs</code> - Login and password policies<br>
+                    • <code>etc/security/pwquality.conf</code> - Password quality requirements<br>
+                    • <code>etc/shadow</code> - User password and account aging information<br>
+                    • <code>etc/ssh/sshd_config</code> - SSH server configuration<br>
+                    • <code>etc/sudoers</code> - Sudo privileges configuration<br>
+                    • <code>etc/sysctl.conf</code> - Kernel parameters<br>
+                    • <code>etc/selinux/config</code> - SELinux configuration<br>
+                    • <code>etc/modprobe.d/CIS.conf</code> - Kernel module blacklist<br>
+                    • <code>etc/audit/auditd.conf</code> - Audit daemon configuration<br>
+                    • <code>etc/audit/rules.d/audit.rules</code> - Audit rules<br>
+                    • <code>etc/rsyslog.conf</code> - System logging configuration<br>
+                    • <code>etc/rsyslog.d/</code> - Additional rsyslog configs (directory)<br>
+                    • <code>var/log/secure</code> - Authentication and authorization logs<br>
+                    • <code>etc/firewalld/zones/public.xml</code> - Firewall public zone configuration<br>
+                    • <code>etc/hosts.allow</code> - Access control allow list<br>
+                    • <code>etc/hosts.deny</code> - Access control deny list<br>
+                    • <code>etc/fstab</code> - File system mount configuration<br>
+                    • <code>etc/crontab</code> - System-wide cron job configuration<br>
+                    • <code>etc/logrotate.conf</code> - Log rotation configuration<br>
+                    • <code>os-release.txt</code> - Operating system information<br>
+                    • <code>users-list.txt</code> - System users list<br>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-left: 3px solid #2196F3; font-size: 0.9em;">
+                    <strong>💡 How to create the archive:</strong><br>
+                    Run these commands on your RHEL server:<br>
+                    <code style="display: block; margin-top: 5px; padding: 5px; background: white;">
+                    mkdir -p nrb-cyber/etc/{pam.d,security,ssh,selinux,modprobe.d,audit/rules.d,firewalld/zones}<br>
+                    mkdir -p nrb-cyber/etc/rsyslog.d nrb-cyber/var/log<br>
+                    cp /etc/pam.d/system-auth nrb-cyber/etc/pam.d/<br>
+                    cp /etc/pam.d/password-auth nrb-cyber/etc/pam.d/<br>
+                    cp /etc/login.defs nrb-cyber/etc/<br>
+                    cp /etc/security/pwquality.conf nrb-cyber/etc/security/<br>
+                    cp /etc/shadow nrb-cyber/etc/<br>
+                    cp /etc/ssh/sshd_config nrb-cyber/etc/ssh/<br>
+                    cp /etc/sudoers nrb-cyber/etc/<br>
+                    cp /etc/sysctl.conf nrb-cyber/etc/<br>
+                    cp /etc/selinux/config nrb-cyber/etc/selinux/<br>
+                    cp /etc/modprobe.d/CIS.conf nrb-cyber/etc/modprobe.d/ 2>/dev/null || touch nrb-cyber/etc/modprobe.d/CIS.conf<br>
+                    cp /etc/audit/auditd.conf nrb-cyber/etc/audit/<br>
+                    cp /etc/audit/rules.d/audit.rules nrb-cyber/etc/audit/rules.d/<br>
+                    cp /etc/rsyslog.conf nrb-cyber/etc/<br>
+                    cp -r /etc/rsyslog.d/* nrb-cyber/etc/rsyslog.d/ 2>/dev/null || true<br>
+                    cp /var/log/secure nrb-cyber/var/log/ 2>/dev/null || touch nrb-cyber/var/log/secure<br>
+                    cp /etc/firewalld/zones/public.xml nrb-cyber/etc/firewalld/zones/ 2>/dev/null || touch nrb-cyber/etc/firewalld/zones/public.xml<br>
+                    cp /etc/hosts.allow nrb-cyber/etc/ 2>/dev/null || touch nrb-cyber/etc/hosts.allow<br>
+                    cp /etc/hosts.deny nrb-cyber/etc/ 2>/dev/null || touch nrb-cyber/etc/hosts.deny<br>
+                    cp /etc/fstab nrb-cyber/etc/<br>
+                    cp /etc/crontab nrb-cyber/etc/<br>
+                    cp /etc/logrotate.conf nrb-cyber/etc/<br>
+                    cat /etc/os-release > nrb-cyber/os-release.txt<br>
+                    cat /etc/passwd > nrb-cyber/users-list.txt<br>
+                    tar -czf nrb-cyber-config.tar.gz -C nrb-cyber .
+                    </code>
+                </div>
+            `;
+            descDiv.style.display = 'block';
+            // Update file input to accept tar.gz archives
+            fileInput.setAttribute('accept', '.tar.gz,.tgz,.tar');
+        } else if (complianceType === 'nta_cyber_byelaw_2020') {
+            descText.innerHTML = `
+                <strong>Upload a tar.gz archive containing RHEL configuration files</strong><br>
+                • Expected format: <code>.tar.gz</code> or <code>.tgz</code> archive<br>
+                • Will check against: <strong>Nepal Telecom Authority (NTA) Cyber Security Byelaw 2020</strong><br>
+                • <strong>Required files in the archive:</strong><br>
+                <div style="margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                    • <code>etc/pam.d/system-auth</code> - PAM authentication configuration<br>
+                    • <code>etc/login.defs</code> - Login and password policies<br>
+                    • <code>etc/security/pwquality.conf</code> - Password quality requirements<br>
+                    • <code>etc/sudoers</code> - Sudo privileges configuration<br>
+                    • <code>etc/ssh/sshd_config</code> - SSH server configuration<br>
+                    • <code>etc/sysctl.conf</code> - Kernel security parameters<br>
+                    • <code>etc/selinux/config</code> - SELinux configuration<br>
+                    • <code>etc/firewalld/zones/public.xml</code> - Firewall configuration<br>
+                    • <code>etc/resolv.conf</code> - DNS resolver configuration<br>
+                    • <code>etc/audit/auditd.conf</code> - Audit daemon configuration<br>
+                    • <code>etc/audit/rules.d/audit.rules</code> - Audit rules<br>
+                    • <code>etc/rsyslog.conf</code> - System logging configuration<br>
+                    • <code>password_policy.txt</code> - Password policy documentation<br>
+                    • <code>ipv6_status.txt</code> - IPv6 configuration status<br>
+                    • <code>listening_services.txt</code> - List of listening services<br>
+                    • <code>os_license_check.txt</code> - OS subscription/license status<br>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-left: 3px solid #2196F3; font-size: 0.9em;">
+                    <strong>💡 How to create the archive:</strong><br>
+                    Run these commands on your RHEL server:<br>
+                    <code style="display: block; margin-top: 5px; padding: 5px; background: white;">
+                    mkdir -p nta-config/etc/{pam.d,security,ssh,selinux,audit/rules.d,firewalld/zones}<br>
+                    cp /etc/pam.d/system-auth nta-config/etc/pam.d/<br>
+                    cp /etc/login.defs nta-config/etc/<br>
+                    cp /etc/security/pwquality.conf nta-config/etc/security/<br>
+                    cp /etc/sudoers nta-config/etc/<br>
+                    cp /etc/ssh/sshd_config nta-config/etc/ssh/<br>
+                    cp /etc/sysctl.conf nta-config/etc/<br>
+                    cp /etc/selinux/config nta-config/etc/selinux/<br>
+                    cp /etc/firewalld/zones/public.xml nta-config/etc/firewalld/zones/ 2>/dev/null || touch nta-config/etc/firewalld/zones/public.xml<br>
+                    cp /etc/resolv.conf nta-config/etc/<br>
+                    cp /etc/audit/auditd.conf nta-config/etc/audit/<br>
+                    cp /etc/audit/rules.d/audit.rules nta-config/etc/audit/rules.d/<br>
+                    cp /etc/rsyslog.conf nta-config/etc/<br>
+                    echo "Password max age: 90 days, min length: 8" > nta-config/password_policy.txt<br>
+                    sysctl net.ipv6.conf.all.disable_ipv6 > nta-config/ipv6_status.txt<br>
+                    ss -tuln > nta-config/listening_services.txt<br>
+                    subscription-manager status > nta-config/os_license_check.txt 2>/dev/null || echo "No subscription" > nta-config/os_license_check.txt<br>
+                    tar -czf nta-cyber-byelaw-2020.tar.gz -C nta-config .
+                    </code>
+                </div>
+            `;
+            descDiv.style.display = 'block';
+            // Update file input to accept tar.gz archives
+            fileInput.setAttribute('accept', '.tar.gz,.tgz,.tar');
+        } else if (complianceType === 'nta_firewall_opnsense') {
+            descText.innerHTML = `
+                <strong>Upload your OPNsense/pfSense Firewall configuration file</strong><br>
+                • Expected format: <code>.xml</code> configuration backup file<br>
+                • Will check against: <strong>Nepal Telecom Authority (NTA) Cyber Security Byelaw 2020 &amp; NTA Cyber Security Policy</strong><br>
+                • <strong>Security areas audited:</strong><br>
+                <div style="margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                    <i class="fas fa-lock"></i> <strong>Management Access</strong> - HTTPS, SSL certificates, strong ciphers<br>
+                    <i class="fas fa-terminal"></i> <strong>SSH Security</strong> - Root login, password auth, key-based access<br>
+                    <i class="fas fa-network-wired"></i> <strong>SNMP Security</strong> - Community strings, contact info<br>
+                    <i class="fas fa-shield-virus"></i> <strong>IDS/IPS</strong> - Intrusion detection/prevention status<br>
+                    <i class="fas fa-clipboard-list"></i> <strong>Logging</strong> - Syslog, log retention, local logging<br>
+                    <i class="fas fa-fire"></i> <strong>Firewall Rules</strong> - Deny policies, rule documentation<br>
+                    <i class="fas fa-globe"></i> <strong>Network Security</strong> - Bogon filtering, NAT, IPv6<br>
+                    <i class="fas fa-key"></i> <strong>VPN Security</strong> - IPsec, WireGuard configuration<br>
+                    <i class="fas fa-dns"></i> <strong>DNS Security</strong> - DNSSEC, identity hiding<br>
+                    <i class="fas fa-users"></i> <strong>User Management</strong> - Admin groups, account policies<br>
+                    <i class="fas fa-cog"></i> <strong>System Hardening</strong> - Console access, hostname, domain<br>
+                    <i class="fas fa-clock"></i> <strong>Time Sync</strong> - NTP servers, timezone<br>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-left: 3px solid #2196F3; font-size: 0.9em;">
+                    <strong>💡 How to export configuration from OPNsense:</strong><br>
+                    <ol style="margin: 5px 0 0 20px; padding: 0;">
+                        <li>Login to OPNsense Web Interface</li>
+                        <li>Navigate to <strong>System > Configuration > Backups</strong></li>
+                        <li>Click <strong>"Download configuration"</strong></li>
+                        <li>Save the <code>.xml</code> file and upload it here</li>
+                    </ol>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.9em;">
+                    <strong>⚠️ Security Note:</strong> The configuration file may contain sensitive data. 
+                    Ensure you handle it securely and delete it after the audit.
+                </div>
+            `;
+            descDiv.style.display = 'block';
+            // Update file input to accept XML files
+            fileInput.setAttribute('accept', '.xml');
+        } else {
+            descDiv.style.display = 'none';
+            // Reset to accept all common config files
+            fileInput.setAttribute('accept', '.conf,.config,.cfg,.txt,.tar.gz,.tgz,*');
+        }
+    }
+
+    function displayFileName() {
+        const fileInput = document.getElementById('offlineConfigFile');
+        const fileNameDiv = document.getElementById('fileName');
+        
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const fileSize = (file.size / 1024).toFixed(2);
+            fileNameDiv.innerHTML = `<i class="fas fa-check-circle"></i> Selected: <strong>${file.name}</strong> (${fileSize} KB)`;
+        } else {
+            fileNameDiv.innerHTML = '';
+        }
+    }
+
+    async function launchOfflineAudit() {
+        const complianceType = document.getElementById('offlineComplianceType').value;
+        const fileInput = document.getElementById('offlineConfigFile');
+        const targetName = document.getElementById('offlineTargetName').value.trim();
+        const statusDiv = document.getElementById('offlineAuditStatus');
+        
+        // Validation
+        if (!complianceType) {
+            statusDiv.innerHTML = '<div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 10px;"><i class="fas fa-exclamation-circle"></i> Please select a compliance standard.</div>';
+            return;
+        }
+        
+        if (!fileInput.files.length) {
+            statusDiv.innerHTML = '<div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 10px;"><i class="fas fa-exclamation-circle"></i> Please select a configuration file to upload.</div>';
+            return;
+        }
+        
+        // Validate file type for NRB RHEL
+        if (complianceType === 'nrb_rhel') {
+            const fileName = fileInput.files[0].name;
+            if (!fileName.endsWith('.tar.gz') && !fileName.endsWith('.tgz')) {
+                statusDiv.innerHTML = '<div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 10px;"><i class="fas fa-exclamation-circle"></i> NRB RHEL compliance requires a .tar.gz or .tgz archive file.</div>';
+                return;
+            }
+        }
+        
+        // Show loading state
+        statusDiv.innerHTML = '<div style="background: #d1ecf1; color: #0c5460; padding: 12px; border-radius: 8px; margin-top: 10px;"><i class="fas fa-spinner fa-spin"></i> Uploading and processing configuration file...</div>';
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('compliance_type', complianceType);
+        if (targetName) {
+            formData.append('target_name', targetName);
+        }
+        
+        try {
+            const response = await fetch('/api/offline_audit/launch', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                statusDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <div style="display: flex; align-items: start; gap: 15px; margin-bottom: 15px;">
+                            <i class="fas fa-check-circle" style="font-size: 32px;"></i>
+                            <div style="flex: 1;">
+                                <strong style="font-size: 18px; display: block; margin-bottom: 8px;">Audit Launched Successfully!</strong>
+                                <div style="font-size: 14px; opacity: 0.95;">
+                                    Target: <strong>${result.target_name}</strong><br>
+                                    Compliance: <strong>${result.compliance_type}</strong><br>
+                                    Audit ID: <code style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 4px; font-size: 12px;">${result.audit_id}</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="showPage('overview')" 
+                                    style="background: white; color: #10b981; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; min-width: 150px;">
+                                <i class="fas fa-chart-pie"></i> View Overview
+                            </button>
+                            <button onclick="showPage('active')" 
+                                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; min-width: 150px;">
+                                <i class="fas fa-tasks"></i> Monitor Progress
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Clear form
+                fileInput.value = '';
+                document.getElementById('offlineTargetName').value = '';
+                document.getElementById('fileName').innerHTML = '';
+                
+                // Refresh dashboards
+                setTimeout(() => {
+                    refreshDashboard();
+                    refreshActiveAudits();
+                }, 1000);
+                
+            } else {
+                statusDiv.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> ${result.message || 'Failed to launch offline audit'}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error launching offline audit:', error);
+            statusDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> ${error.message || 'Network error occurred'}
+                </div>
+            `;
+        }
+    }
+    // --- End Offline Config Audit Functions ---
+
+    </script>
+
+    <script>
+    // ============ Compare Reports Functions ============
+    
+    // Load available audits when compare page is shown
+    async function loadCompareAudits() {
+        try {
+            const res = await fetch('/api/audits/active');
+            if (!res.ok) throw new Error('Failed to fetch audits');
+            
+            const data = await res.json();
+            const selectA = document.getElementById('compareAuditA');
+            const selectB = document.getElementById('compareAuditB');
+            
+            // Clear existing options
+            selectA.innerHTML = '';
+            selectB.innerHTML = '';
+            
+            // Add default option
+            const defaultOptionA = document.createElement('option');
+            defaultOptionA.value = '';
+            defaultOptionA.textContent = '-- Select Report A --';
+            selectA.appendChild(defaultOptionA);
+            
+            const defaultOptionB = document.createElement('option');
+            defaultOptionB.value = '';
+            defaultOptionB.textContent = '-- Select Report B --';
+            selectB.appendChild(defaultOptionB);
+            
+            // Filter only completed audits
+            const completedAudits = data.audits.filter(a => a.status === 'completed');
+            
+            if (completedAudits.length === 0) {
+                const noAuditsA = document.createElement('option');
+                noAuditsA.value = '';
+                noAuditsA.disabled = true;
+                noAuditsA.textContent = 'No completed audits available';
+                selectA.appendChild(noAuditsA);
+                
+                const noAuditsB = document.createElement('option');
+                noAuditsB.value = '';
+                noAuditsB.disabled = true;
+                noAuditsB.textContent = 'No completed audits available';
+                selectB.appendChild(noAuditsB);
+                return;
+            }
+            
+            // Add options for each completed audit
+            completedAudits.forEach(audit => {
+                const date = audit.start_time || 'N/A';
+                
+                // Calculate compliance percentage from summary
+                const summary = audit.summary || { passed: 0, total: 0 };
+                const compliancePercentage = audit.compliance_percentage || 
+                    (summary.total > 0 ? Math.round((summary.passed / summary.total) * 100) : 0);
+                
+                // Get playbook info - use playbook_used if available, otherwise use level
+                const playbookInfo = audit.playbook_used || audit.level || 'Unknown';
+                
+                // Create option for selectA
+                const optionA = document.createElement('option');
+                optionA.value = audit.id;  // Changed from audit.audit_id to audit.id
+                optionA.setAttribute('data-playbook', playbookInfo);
+                optionA.setAttribute('data-ip', audit.target);  // Changed from audit.ip to audit.target
+                optionA.setAttribute('data-os', audit.os);
+                optionA.setAttribute('data-level', audit.level);
+                optionA.setAttribute('data-date', date);
+                optionA.setAttribute('data-compliance', compliancePercentage);  // Use calculated value
+                optionA.textContent = `${audit.target} - ${playbookInfo} - ${date}`;
+                selectA.appendChild(optionA);
+                
+                // Create option for selectB
+                const optionB = document.createElement('option');
+                optionB.value = audit.id;  // Changed from audit.audit_id to audit.id
+                optionB.setAttribute('data-playbook', playbookInfo);
+                optionB.setAttribute('data-ip', audit.target);  // Changed from audit.ip to audit.target
+                optionB.setAttribute('data-os', audit.os);
+                optionB.setAttribute('data-level', audit.level);
+                optionB.setAttribute('data-date', date);
+                optionB.setAttribute('data-compliance', compliancePercentage);  // Use calculated value
+                optionB.textContent = `${audit.target} - ${playbookInfo} - ${date}`;
+                selectB.appendChild(optionB);
+            });
+            
+            console.log(`Loaded ${completedAudits.length} completed audits for comparison`);
+            
+        } catch (error) {
+            console.error('Error loading audits for comparison:', error);
+        }
+    }
+    
+    // Load audit details when selection changes
+    function loadAuditDetails(report) {
+        const selectId = report === 'A' ? 'compareAuditA' : 'compareAuditB';
+        const detailsId = report === 'A' ? 'auditDetailsA' : 'auditDetailsB';
+        const select = document.getElementById(selectId);
+        const detailsDiv = document.getElementById(detailsId);
+        
+        if (!select.value) {
+            detailsDiv.innerHTML = '<p style="text-align: center; padding: 20px;">Select a report to see details</p>';
+            return;
+        }
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const playbook = selectedOption.getAttribute('data-playbook');
+        const ip = selectedOption.getAttribute('data-ip');
+        const os = selectedOption.getAttribute('data-os');
+        const date = selectedOption.getAttribute('data-date');
+        const compliance = selectedOption.getAttribute('data-compliance');
+        
+        detailsDiv.innerHTML = `
+            <div style="background: white; padding: 12px; border-radius: 6px; border-left: 4px solid ${report === 'A' ? '#667eea' : '#764ba2'};">
+                <p style="margin: 5px 0;"><strong>Target:</strong> ${ip}</p>
+                <p style="margin: 5px 0;"><strong>Playbook:</strong> <span style="background: #e7f3ff; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 12px;">${playbook}</span></p>
+                <p style="margin: 5px 0;"><strong>OS:</strong> ${os}</p>
+                <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+                <p style="margin: 5px 0;"><strong>Compliance:</strong> <span style="color: ${compliance >= 80 ? '#28a745' : compliance >= 50 ? '#ffc107' : '#dc3545'}; font-weight: 600;">${compliance}%</span></p>
+            </div>
+        `;
+    }
+    
+    // Perform comparison
+    async function performComparison() {
+        const auditIdA = document.getElementById('compareAuditA').value.trim();
+        const auditIdB = document.getElementById('compareAuditB').value.trim();
+        const resultsDiv = document.getElementById('comparisonResults');
+        
+        // Debug logging
+        console.log('Audit A ID:', auditIdA);
+        console.log('Audit B ID:', auditIdB);
+        console.log('Are they equal?', auditIdA === auditIdB);
+        
+        // Validation
+        if (!auditIdA || !auditIdB) {
+            alert('⚠️ Please select both Report A and Report B to compare');
+            return;
+        }
+        
+        if (auditIdA === auditIdB) {
+            alert('⚠️ Please select two different reports to compare');
+            return;
+        }
+        
+        // Show loading
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #667eea;"></i>
+                <p style="margin-top: 20px; font-size: 16px; color: #495057;">Comparing reports...</p>
+            </div>
+        `;
+        
+        try {
+            const response = await fetch('/api/compare_reports', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    audit_id_1: auditIdA,
+                    audit_id_2: auditIdB
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                // Show error - especially for playbook mismatch
+                const errorDetails = result.details || {};
+                resultsDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);">
+                        <div style="display: flex; align-items: start; gap: 20px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px;"></i>
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 15px 0; font-size: 24px;">Cannot Compare Reports</h3>
+                                <p style="margin: 0 0 15px 0; font-size: 16px; opacity: 0.95;">${result.error}</p>
+                                ${errorDetails.message ? `<p style="margin: 10px 0; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 6px; font-size: 14px;">${errorDetails.message}</p>` : ''}
+                                ${errorDetails.audit1_playbook ? `
+                                    <div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 6px; margin-top: 15px;">
+                                        <p style="margin: 5px 0; font-size: 14px;"><strong>Report A Playbook:</strong> <code style="background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px;">${errorDetails.audit1_playbook}</code></p>
+                                        <p style="margin: 5px 0; font-size: 14px;"><strong>Report B Playbook:</strong> <code style="background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px;">${errorDetails.audit2_playbook}</code></p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Display comparison results
+            displayComparisonResults(result);
+            
+        } catch (error) {
+            console.error('Error comparing reports:', error);
+            resultsDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                    <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> ${error.message || 'Failed to compare reports'}
+                </div>
+            `;
+        }
+    }
+    
+    // Display comparison results
+    function displayComparisonResults(result) {
+        const resultsDiv = document.getElementById('comparisonResults');
+        const { audit1, audit2, changes, differences, summary } = result;
+        
+        const complianceChangeColor = changes.compliance_change > 0 ? '#28a745' : changes.compliance_change < 0 ? '#dc3545' : '#6c757d';
+        const complianceChangeIcon = changes.compliance_change > 0 ? 'fa-arrow-up' : changes.compliance_change < 0 ? 'fa-arrow-down' : 'fa-minus';
+        
+        let html = `
+            <!-- Summary Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                <h3 style="margin: 0 0 15px 0; font-size: 22px;">
+                    <i class="fas fa-chart-line"></i> Comparison Results
+                </h3>
+                <p style="margin: 0; opacity: 0.95; font-size: 14px;">
+                    <i class="fas fa-file-code"></i> <strong>Playbook:</strong> <code style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 4px; font-size: 12px;">${result.playbook}</code>
+                </p>
+            </div>
+            
+            <!-- Metrics Comparison -->
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; margin-bottom: 25px; align-items: center;">
+                <!-- Report A Metrics -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px;">
+                        <i class="fas fa-file-alt"></i> Report A (Baseline)
+                    </h4>
+                    <p style="margin: 5px 0; font-size: 13px;"><strong>Target:</strong> ${audit1.ip}</p>
+                    <p style="margin: 5px 0; font-size: 13px;"><strong>Date:</strong> ${new Date(audit1.timestamp).toLocaleString()}</p>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                        <div style="font-size: 32px; font-weight: 700; color: #667eea;">${audit1.metrics.compliance_percentage}%</div>
+                        <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">Compliance Rate</div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 13px;">
+                        <div><span style="color: #28a745;">✓</span> ${audit1.metrics.passed} Passed</div>
+                        <div><span style="color: #dc3545;">✗</span> ${audit1.metrics.failed} Failed</div>
+                    </div>
+                </div>
+                
+                <!-- Change Indicator -->
+                <div style="text-align: center; padding: 20px;">
+                    <div style="background: ${complianceChangeColor}; color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <i class="fas ${complianceChangeIcon}" style="font-size: 24px;"></i>
+                        <div style="font-size: 16px; font-weight: 700; margin-top: 5px;">${changes.compliance_change > 0 ? '+' : ''}${changes.compliance_change.toFixed(1)}%</div>
+                    </div>
+                </div>
+                
+                <!-- Report B Metrics -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #764ba2;">
+                    <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px;">
+                        <i class="fas fa-file-alt"></i> Report B (Comparison)
+                    </h4>
+                    <p style="margin: 5px 0; font-size: 13px;"><strong>Target:</strong> ${audit2.ip}</p>
+                    <p style="margin: 5px 0; font-size: 13px;"><strong>Date:</strong> ${new Date(audit2.timestamp).toLocaleString()}</p>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                        <div style="font-size: 32px; font-weight: 700; color: #764ba2;">${audit2.metrics.compliance_percentage}%</div>
+                        <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">Compliance Rate</div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 13px;">
+                        <div><span style="color: #28a745;">✓</span> ${audit2.metrics.passed} Passed</div>
+                        <div><span style="color: #dc3545;">✗</span> ${audit2.metrics.failed} Failed</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: 700;">${summary.total_improvements}</div>
+                    <div style="font-size: 14px; opacity: 0.95; margin-top: 5px;"><i class="fas fa-arrow-up"></i> Improvements</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: 700;">${summary.total_regressions}</div>
+                    <div style="font-size: 14px; opacity: 0.95; margin-top: 5px;"><i class="fas fa-arrow-down"></i> Regressions</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 36px; font-weight: 700;">${summary.total_unchanged}</div>
+                    <div style="font-size: 14px; opacity: 0.95; margin-top: 5px;"><i class="fas fa-equals"></i> Unchanged</div>
+                </div>
+            </div>
+        `;
+        
+        // Improvements Section
+        if (differences.improvements.length > 0) {
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #28a745; margin-bottom: 15px; font-size: 18px;">
+                        <i class="fas fa-check-circle"></i> Improvements (${differences.improvements.length})
+                    </h4>
+                    <div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #28a745;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                                    <th style="padding: 12px; text-align: left; width: 50%;">Check</th>
+                                    <th style="padding: 12px; text-align: center; width: 20%;">Before</th>
+                                    <th style="padding: 12px; text-align: center; width: 10%;"><i class="fas fa-arrow-right"></i></th>
+                                    <th style="padding: 12px; text-align: center; width: 20%;">After</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            differences.improvements.forEach((item, idx) => {
+                html += `
+                    <tr style="border-bottom: 1px solid #e9ecef; ${idx % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                        <td style="padding: 12px; font-size: 13px;">${item.check}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #dc3545; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                ${item.status_before}
+                            </span>
+                        </td>
+                        <td style="padding: 12px; text-align: center; color: #28a745;">
+                            <i class="fas fa-arrow-right"></i>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                ${item.status_after}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Regressions Section
+        if (differences.regressions.length > 0) {
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #dc3545; margin-bottom: 15px; font-size: 18px;">
+                        <i class="fas fa-exclamation-triangle"></i> Regressions (${differences.regressions.length})
+                    </h4>
+                    <div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #dc3545;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                                    <th style="padding: 12px; text-align: left; width: 50%;">Check</th>
+                                    <th style="padding: 12px; text-align: center; width: 20%;">Before</th>
+                                    <th style="padding: 12px; text-align: center; width: 10%;"><i class="fas fa-arrow-right"></i></th>
+                                    <th style="padding: 12px; text-align: center; width: 20%;">After</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            differences.regressions.forEach((item, idx) => {
+                html += `
+                    <tr style="border-bottom: 1px solid #e9ecef; ${idx % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                        <td style="padding: 12px; font-size: 13px;">${item.check}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                ${item.status_before}
+                            </span>
+                        </td>
+                        <td style="padding: 12px; text-align: center; color: #dc3545;">
+                            <i class="fas fa-arrow-right"></i>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="background: #dc3545; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                ${item.status_after}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // New checks
+        if (differences.new_checks.length > 0) {
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #17a2b8; margin-bottom: 15px; font-size: 18px;">
+                        <i class="fas fa-plus-circle"></i> New Checks (${differences.new_checks.length})
+                    </h4>
+                    <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                        <p style="margin: 0; font-size: 13px; color: #0c5460;">
+                            These checks appear only in Report B
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Removed checks
+        if (differences.removed_checks.length > 0) {
+            html += `
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: #ffc107; margin-bottom: 15px; font-size: 18px;">
+                        <i class="fas fa-minus-circle"></i> Removed Checks (${differences.removed_checks.length})
+                    </h4>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <p style="margin: 0; font-size: 13px; color: #856404;">
+                            These checks appear only in Report A
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        resultsDiv.innerHTML = html;
+    }
+    
+    // Load audits when compare page is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        const originalShowPage = window.showPage;
+        window.showPage = function(id) {
+            originalShowPage(id);
+            if (id === 'compare') {
+                loadCompareAudits();
+            }
+        };
+    });
+    
+    </script>
+
+    <script>
+    // Corrected logic for admin visibility
+    
+    async function loadUserInfo() {
+        try {
+            const res = await fetch("/api/user-info");
+            const data = await res.json();
+            
+            userRole = data.role; // Store the role globally
+            
+            // Update user display with role badge
+            const roleColor = data.role === 'Administrator' ? '#667eea' : '#4ade80';
+            document.getElementById("userDisplay").innerHTML =
+                `<i class="fas fa-user-circle" style="font-size: 18px;"></i>
+                <span>Logged in as: <strong>${data.username}</strong> 
+                <span style="background: ${roleColor}; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 5px;">${data.role}</span></span>`;
+                
+            // Set element visibility based on role
+            setAdminVisibility(userRole); 
+            
+        } catch (err) {
+            console.log("Error loading user info:", err);
+        }
+    }
+
+    function setAdminVisibility(role) {
+        if (role === "Administrator") {
+            document.querySelectorAll(".admin-only").forEach(el => {
+                // Check if the element should be displayed as a block or in-line (e.g., buttons)
+                // We use block here as the default for admin controls.
+                el.style.display = "block";
+            });
+        } else {
+            document.querySelectorAll(".admin-only").forEach(el => {
+                el.style.display = "none";
+            });
+        }
+    }
+
+    // Initial call to load user info and set up UI visibility
+    loadUserInfo();
+    
+    // The rest of your user management functions below are moved to the previous script tag and are not needed here.
+    </script>
+    <script>
+        async function logout() {
+            await fetch("/api/logout", { method: "POST" });
+
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+
+        // Admin: Create a new user
+        async function submitNewUser() {
+            const username = document.getElementById("newUserName").value.trim();
+            const password = document.getElementById("newUserPassword").value.trim();
+            const role = document.getElementById("newUserRole").value;
+
+            const msg = document.getElementById("createUserMsg");
+
+            if (!username || !password) {
+                msg.innerHTML = "Username and password are required.";
+                msg.style.color = "red";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/register", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: role
+                    })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    msg.innerHTML = "User created successfully!";
+                    msg.style.color = "green";
+
+                    // Clear fields
+                    document.getElementById("newUserName").value = "";
+                    document.getElementById("newUserPassword").value = "";
+
+                    // Refresh user table automatically if admin is viewing it
+                    if (window.currentPage === "users") {
+                        loadUsersUI();
+                    }
+
+                } else {
+                    msg.innerHTML = result.message || "Failed to create user.";
+                    msg.style.color = "red";
+                }
+
+            } catch (err) {
+                msg.innerHTML = "Error creating user.";
+                msg.style.color = "red";
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+<script>
+// PDF Preview Functions
+function previewPDF(auditId) {
+    const modal = document.getElementById('pdfPreviewModal');
+    if (!modal) {
+        // Create modal if it doesn't exist
+        const modalHTML = `
+            <div id="pdfPreviewModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
+                <div style="position: relative; width: 95%; height: 95%; margin: 2.5% auto; background: white; border-radius: 10px; overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0; font-size: 20px;"><i class="fas fa-file-pdf"></i> PDF Report Preview</h2>
+                        <div>
+                            <button onclick="downloadPDF()" style="background: white; color: #667eea; border: none; padding: 8px 16px; margin-right: 10px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button onclick="closePDFPreview()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                    <iframe id="pdfFrame" style="width: 100%; height: calc(100% - 60px); border: none;"></iframe>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Set the PDF source and show modal
+    document.getElementById('pdfFrame').src = `/api/audit/${auditId}/report?format=pdf`;
+    document.getElementById('pdfPreviewModal').style.display = 'block';
+    window.currentPDFAuditId = auditId;
+}
+
+function closePDFPreview() {
+    document.getElementById('pdfPreviewModal').style.display = 'none';
+    document.getElementById('pdfFrame').src = '';
+}
+
+function downloadPDF() {
+    if (window.currentPDFAuditId) {
+        window.open(`/api/audit/${window.currentPDFAuditId}/report?format=pdf&download=true`, '_blank');
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('pdfPreviewModal');
+    if (event.target === modal) {
+        closePDFPreview();
+    }
+});
+</script>

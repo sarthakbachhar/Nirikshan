@@ -1,0 +1,537 @@
+---
+################################################################################
+# NTA Firewall Security Audit Playbook - OPNsense
+#
+# I created this playbook to audit OPNsense and pfSense firewalls against
+# NTA (Nepal Telecom Authority) requirements. This is a unique feature of
+# my project - not many tools can audit firewall configs like this.
+#
+# Author: Me
+# Project: Nirikshan (Final Year Project)
+################################################################################
+#
+# HOW IT WORKS:
+#   Users export their firewall config XML from OPNsense and upload it.
+#   My system parses the XML and checks each setting against NTA rules.
+#
+# HOW TO GET THE CONFIG FROM OPNSENSE:
+#   1. Login to OPNsense admin panel
+#   2. Go to System > Configuration > Backups
+#   3. Click "Download configuration"
+#   4. Upload the .xml file to Nirikshan
+#
+# WHAT STANDARDS I CHECK AGAINST:
+#   - NTA Cyber Security Byelaw 2020
+#   - NTA Cyber Security Policy
+#   - ISO 27001 Network Security Controls
+#   - CIS OPNsense/pfSense Benchmarks
+#
+# PARTS OF THE CONFIG I AUDIT:
+#   - /opnsense/system/ssh/              - SSH access settings
+#   - /opnsense/system/webgui/           - Web admin interface
+#   - /opnsense/filter/rule/             - Firewall rules
+#   - /opnsense/OPNsense/IDS/            - Intrusion Detection
+#   - /opnsense/OPNsense/Firewall/       - Advanced firewall settings
+#   - /opnsense/snmpd/                   - SNMP config
+#   - /opnsense/interfaces/              - Network interfaces
+#   - /opnsense/OPNsense/Syslog/         - Logging settings
+#   - /opnsense/system/                  - General system settings
+#
+# SEVERITY LEVELS: CRITICAL, HIGH, MEDIUM, LOW, INFO
+#
+################################################################################
+
+metadata:
+  name: "NTA Firewall Security Compliance - OPNsense Audit"
+  version: "1.0.0"
+  description: "Nepal Telecom Authority (NTA) firewall security compliance checks for OPNsense/pfSense firewalls"
+  target_device: "OPNsense/pfSense Firewall"
+  config_format: "XML"
+  compliance_framework: "NTA Cyber Security Byelaw 2020, NTA Cyber Security Policy"
+  last_updated: "2026-01-05"
+
+# =============================================================================
+# SECTION 1: SECURE MANAGEMENT ACCESS
+# These checks make sure the firewall's admin interface is properly secured
+# =============================================================================
+management_access_checks:
+
+  # First thing - make sure they're using HTTPS for the web admin
+  - id: "NTA-FW-MGMT-1.1"
+    name: "Web GUI must use HTTPS"
+    description: "Management interface must be accessed over encrypted HTTPS connection"
+    xml_path: "system/webgui/protocol"
+    check_type: "value_equals"
+    expected_value: "https"
+    severity: "CRITICAL"
+    remediation: "Navigate to System > Settings > Administration and enable HTTPS for web GUI"
+    nta_reference: "NTA Cyber Byelaw 2020 - Section 8: Secure Communications"
+
+  - id: "NTA-FW-MGMT-1.2"
+    name: "SSL/TLS Certificate must be configured"
+    description: "A valid SSL certificate must be configured for web management"
+    xml_path: "system/webgui/ssl-certref"
+    check_type: "not_empty"
+    severity: "HIGH"
+    remediation: "Generate or import a valid SSL certificate in System > Trust > Certificates"
+    nta_reference: "NTA Cyber Policy - Cryptographic Controls"
+
+  - id: "NTA-FW-MGMT-1.3"
+    name: "Strong SSL ciphers should be configured"
+    description: "Only strong SSL cipher suites should be allowed"
+    xml_path: "system/webgui/ssl-ciphers"
+    check_type: "not_empty_or_modern"
+    severity: "MEDIUM"
+    remediation: "Configure strong cipher suites in System > Settings > Administration"
+    nta_reference: "NTA Cyber Policy - Encryption Standards"
+
+# =============================================================================
+# SECTION 2: SSH ACCESS CONTROLS
+# =============================================================================
+ssh_checks:
+
+  - id: "NTA-FW-SSH-2.1"
+    name: "SSH access should be restricted"
+    description: "SSH access to firewall should be carefully controlled"
+    xml_path: "system/ssh/enabled"
+    check_type: "evaluate_ssh_enabled"
+    severity: "MEDIUM"
+    remediation: "Disable SSH if not needed, or restrict to specific management interfaces"
+    nta_reference: "NTA Cyber Byelaw 2020 - Access Control"
+
+  - id: "NTA-FW-SSH-2.2"
+    name: "SSH password authentication should be disabled"
+    description: "SSH should use key-based authentication only"
+    xml_path: "system/ssh/passwordauth"
+    check_type: "value_equals"
+    expected_value: "0"
+    severity: "HIGH"
+    remediation: "Disable password authentication in System > Settings > Administration > Secure Shell"
+    nta_reference: "NTA Cyber Byelaw 2020 - Strong Authentication"
+
+  - id: "NTA-FW-SSH-2.3"
+    name: "SSH root login should be disabled"
+    description: "Direct root login via SSH is a security risk"
+    xml_path: "system/ssh/permitrootlogin"
+    check_type: "value_equals"
+    expected_value: "0"
+    severity: "CRITICAL"
+    remediation: "Disable root login in System > Settings > Administration > Secure Shell"
+    nta_reference: "NTA Cyber Byelaw 2020 - Privileged Access Management"
+
+  - id: "NTA-FW-SSH-2.4"
+    name: "SSH should be restricted to admin group"
+    description: "SSH access should be limited to administrator group only"
+    xml_path: "system/ssh/group"
+    check_type: "contains_value"
+    expected_value: "admins"
+    severity: "MEDIUM"
+    remediation: "Restrict SSH to admins group in System > Settings > Administration"
+    nta_reference: "NTA Cyber Policy - Least Privilege"
+
+# =============================================================================
+# SECTION 3: SNMP SECURITY
+# =============================================================================
+snmp_checks:
+
+  - id: "NTA-FW-SNMP-3.1"
+    name: "SNMP community string must not be 'public'"
+    description: "Default SNMP community string is a major security risk"
+    xml_path: "snmpd/rocommunity"
+    check_type: "value_not_equals"
+    forbidden_value: "public"
+    severity: "CRITICAL"
+    remediation: "Change SNMP community string in Services > SNMP to a complex value"
+    nta_reference: "NTA Cyber Byelaw 2020 - Default Credentials"
+
+  - id: "NTA-FW-SNMP-3.2"
+    name: "SNMP community string must not be 'private'"
+    description: "Default SNMP community string 'private' is a security risk"
+    xml_path: "snmpd/rocommunity"
+    check_type: "value_not_equals"
+    forbidden_value: "private"
+    severity: "CRITICAL"
+    remediation: "Change SNMP community string to a unique complex value"
+    nta_reference: "NTA Cyber Byelaw 2020 - Default Credentials"
+
+  - id: "NTA-FW-SNMP-3.3"
+    name: "SNMP system location should be configured"
+    description: "SNMP system location helps in asset management"
+    xml_path: "snmpd/syslocation"
+    check_type: "not_empty"
+    severity: "LOW"
+    remediation: "Configure SNMP system location in Services > SNMP"
+    nta_reference: "NTA Cyber Policy - Asset Management"
+
+  - id: "NTA-FW-SNMP-3.4"
+    name: "SNMP contact information should be configured"
+    description: "SNMP contact helps in incident response"
+    xml_path: "snmpd/syscontact"
+    check_type: "not_empty"
+    severity: "LOW"
+    remediation: "Configure SNMP contact in Services > SNMP"
+    nta_reference: "NTA Cyber Policy - Incident Response"
+
+# =============================================================================
+# SECTION 4: INTRUSION DETECTION/PREVENTION SYSTEM (IDS/IPS)
+# =============================================================================
+ids_checks:
+
+  - id: "NTA-FW-IDS-4.1"
+    name: "Intrusion Detection System should be enabled"
+    description: "IDS/IPS provides critical threat detection capabilities"
+    xml_path: "OPNsense/IDS/general/enabled"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Enable IDS in Services > Intrusion Detection > Administration"
+    nta_reference: "NTA Cyber Byelaw 2020 - Threat Detection"
+
+  - id: "NTA-FW-IDS-4.2"
+    name: "IPS mode should be enabled for active blocking"
+    description: "IPS mode actively blocks detected threats"
+    xml_path: "OPNsense/IDS/general/ips"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Enable IPS mode in Services > Intrusion Detection > Administration"
+    nta_reference: "NTA Cyber Policy - Threat Prevention"
+
+  - id: "NTA-FW-IDS-4.3"
+    name: "IDS should monitor WAN interface"
+    description: "External-facing interface must be monitored for threats"
+    xml_path: "OPNsense/IDS/general/interfaces"
+    check_type: "contains_value"
+    expected_value: "wan"
+    severity: "HIGH"
+    remediation: "Add WAN interface to IDS monitoring in Services > Intrusion Detection"
+    nta_reference: "NTA Cyber Byelaw 2020 - Perimeter Security"
+
+  - id: "NTA-FW-IDS-4.4"
+    name: "IDS should log to syslog"
+    description: "IDS events should be sent to central logging"
+    xml_path: "OPNsense/IDS/general/syslog"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Enable syslog for IDS in Services > Intrusion Detection > Administration"
+    nta_reference: "NTA Cyber Policy - Security Monitoring"
+
+# =============================================================================
+# SECTION 5: LOGGING AND AUDITING
+# =============================================================================
+logging_checks:
+
+  - id: "NTA-FW-LOG-5.1"
+    name: "System logging must be enabled"
+    description: "Firewall must maintain logs for security and compliance"
+    xml_path: "OPNsense/Syslog/general/enabled"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "CRITICAL"
+    remediation: "Enable logging in Services > System Log > Targets"
+    nta_reference: "NTA Cyber Byelaw 2020 - Audit Logging"
+
+  - id: "NTA-FW-LOG-5.2"
+    name: "Local logging should be enabled"
+    description: "Logs should be stored locally as backup"
+    xml_path: "OPNsense/Syslog/general/loglocal"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Enable local logging in Services > System Log > Targets"
+    nta_reference: "NTA Cyber Policy - Log Retention"
+
+  - id: "NTA-FW-LOG-5.3"
+    name: "Log preservation period should be adequate"
+    description: "Logs should be retained for at least 31 days"
+    xml_path: "OPNsense/Syslog/general/maxpreserve"
+    check_type: "numeric_compare"
+    expected_value: "31"
+    comparison: ">="
+    severity: "MEDIUM"
+    remediation: "Set log preservation to at least 31 days in System > Settings > Logging"
+    nta_reference: "NTA Cyber Byelaw 2020 - Log Retention Requirements"
+
+# =============================================================================
+# SECTION 6: FIREWALL RULES
+# =============================================================================
+firewall_rules_checks:
+
+  - id: "NTA-FW-RULE-6.1"
+    name: "Firewall rules should be defined"
+    description: "Explicit firewall rules must be configured"
+    xml_path: "filter/rule"
+    check_type: "exists"
+    severity: "CRITICAL"
+    remediation: "Configure firewall rules in Firewall > Rules"
+    nta_reference: "NTA Cyber Byelaw 2020 - Network Access Control"
+
+  - id: "NTA-FW-RULE-6.2"
+    name: "Default deny rule should be in place"
+    description: "Implicit deny-all policy should be the last rule"
+    xml_path: "filter/rule"
+    check_type: "has_deny_rule"
+    severity: "HIGH"
+    remediation: "Add explicit deny-all rule at the end of ruleset"
+    nta_reference: "NTA Cyber Policy - Default Deny"
+
+  - id: "NTA-FW-RULE-6.3"
+    name: "Rules should have descriptions"
+    description: "All firewall rules should have meaningful descriptions"
+    xml_path: "filter/rule/descr"
+    check_type: "rules_have_descriptions"
+    severity: "MEDIUM"
+    remediation: "Add descriptions to all firewall rules for documentation"
+    nta_reference: "NTA Cyber Policy - Change Management"
+
+  - id: "NTA-FW-RULE-6.4"
+    name: "Avoid 'any to any' allow rules"
+    description: "Overly permissive rules should not exist"
+    xml_path: "filter/rule"
+    check_type: "no_any_any_allow"
+    severity: "HIGH"
+    remediation: "Replace 'any to any' rules with specific source/destination"
+    nta_reference: "NTA Cyber Byelaw 2020 - Least Privilege"
+
+# =============================================================================
+# SECTION 7: NETWORK SECURITY
+# =============================================================================
+network_checks:
+
+  - id: "NTA-FW-NET-7.1"
+    name: "Bogon networks should be blocked on WAN"
+    description: "Traffic from bogon networks should be blocked"
+    xml_path: "interfaces/wan/blockbogons"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "HIGH"
+    remediation: "Enable 'Block bogon networks' on WAN interface in Interfaces > WAN"
+    nta_reference: "NTA Cyber Byelaw 2020 - IP Spoofing Prevention"
+
+  - id: "NTA-FW-NET-7.2"
+    name: "Bogon update interval should be configured"
+    description: "Bogon list should be updated regularly"
+    xml_path: "system/bogons/interval"
+    check_type: "value_in_list"
+    expected_values: ["monthly", "weekly", "daily"]
+    severity: "MEDIUM"
+    remediation: "Set bogon update interval in System > Settings > Miscellaneous"
+    nta_reference: "NTA Cyber Policy - Threat Intelligence"
+
+  - id: "NTA-FW-NET-7.3"
+    name: "NAT reflection should be disabled"
+    description: "NAT reflection can be a security risk"
+    xml_path: "system/disablenatreflection"
+    check_type: "value_equals"
+    expected_value: "yes"
+    severity: "LOW"
+    remediation: "Disable NAT reflection in System > Settings > Miscellaneous"
+    nta_reference: "NTA Cyber Policy - Network Hardening"
+
+  - id: "NTA-FW-NET-7.4"
+    name: "IPv6 configuration should be reviewed"
+    description: "IPv6 should be disabled if not in use to reduce attack surface"
+    xml_path: "system/ipv6allow"
+    check_type: "evaluate_ipv6"
+    severity: "MEDIUM"
+    remediation: "Disable IPv6 if not used in System > Settings > Networking"
+    nta_reference: "NTA Cyber Policy - Attack Surface Reduction"
+
+# =============================================================================
+# SECTION 8: VPN SECURITY
+# =============================================================================
+vpn_checks:
+
+  - id: "NTA-FW-VPN-8.1"
+    name: "IPsec VPN disabled if not in use"
+    description: "IPsec should be disabled if not actively used"
+    xml_path: "OPNsense/IPsec/general/enabled"
+    check_type: "evaluate_vpn_status"
+    severity: "MEDIUM"
+    remediation: "Disable IPsec if not in use in VPN > IPsec > Tunnel Settings"
+    nta_reference: "NTA Cyber Policy - Attack Surface Reduction"
+
+  - id: "NTA-FW-VPN-8.2"
+    name: "WireGuard VPN disabled if not in use"
+    description: "WireGuard should be disabled if not actively used"
+    xml_path: "OPNsense/wireguard/general/enabled"
+    check_type: "evaluate_vpn_status"
+    severity: "MEDIUM"
+    remediation: "Disable WireGuard if not in use in VPN > WireGuard"
+    nta_reference: "NTA Cyber Policy - Attack Surface Reduction"
+
+# =============================================================================
+# SECTION 9: DNS SECURITY
+# =============================================================================
+dns_checks:
+
+  - id: "NTA-FW-DNS-9.1"
+    name: "DNSSEC should be enabled"
+    description: "DNSSEC provides DNS response authenticity verification"
+    xml_path: "OPNsense/unboundplus/general/dnssec"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Enable DNSSEC in Services > Unbound DNS > General"
+    nta_reference: "NTA Cyber Byelaw 2020 - DNS Security"
+
+  - id: "NTA-FW-DNS-9.2"
+    name: "DNS server should hide identity"
+    description: "DNS server should not reveal version information"
+    xml_path: "OPNsense/unboundplus/advanced/hideidentity"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "LOW"
+    remediation: "Enable 'Hide Identity' in Services > Unbound DNS > Advanced"
+    nta_reference: "NTA Cyber Policy - Information Disclosure Prevention"
+
+  - id: "NTA-FW-DNS-9.3"
+    name: "DNS server should hide version"
+    description: "DNS server version should not be disclosed"
+    xml_path: "OPNsense/unboundplus/advanced/hideversion"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "LOW"
+    remediation: "Enable 'Hide Version' in Services > Unbound DNS > Advanced"
+    nta_reference: "NTA Cyber Policy - Information Disclosure Prevention"
+
+# =============================================================================
+# SECTION 10: USER AND GROUP MANAGEMENT
+# =============================================================================
+user_checks:
+
+  - id: "NTA-FW-USER-10.1"
+    name: "Admin group should exist"
+    description: "Administrator group must be properly configured"
+    xml_path: "system/group"
+    check_type: "group_exists"
+    expected_value: "admins"
+    severity: "HIGH"
+    remediation: "Verify admins group exists in System > Access > Groups"
+    nta_reference: "NTA Cyber Byelaw 2020 - Role-Based Access Control"
+
+  - id: "NTA-FW-USER-10.2"
+    name: "Root user should have password set"
+    description: "Root/admin account must have a strong password"
+    xml_path: "system/user/password"
+    check_type: "not_empty"
+    severity: "CRITICAL"
+    remediation: "Set a strong password for root user in System > Access > Users"
+    nta_reference: "NTA Cyber Byelaw 2020 - Password Policy"
+
+  - id: "NTA-FW-USER-10.3"
+    name: "Unused user accounts should be disabled"
+    description: "Users with no login activity should be reviewed"
+    xml_path: "system/user"
+    check_type: "evaluate_user_accounts"
+    severity: "MEDIUM"
+    remediation: "Review and disable unused accounts in System > Access > Users"
+    nta_reference: "NTA Cyber Policy - Account Management"
+
+# =============================================================================
+# SECTION 11: SYSTEM HARDENING
+# =============================================================================
+hardening_checks:
+
+  - id: "NTA-FW-HARD-11.1"
+    name: "Console menu should be disabled"
+    description: "Physical console access should be restricted"
+    xml_path: "system/disableconsolemenu"
+    check_type: "value_equals"
+    expected_value: "1"
+    severity: "MEDIUM"
+    remediation: "Disable console menu in System > Settings > Administration"
+    nta_reference: "NTA Cyber Policy - Physical Security"
+
+  - id: "NTA-FW-HARD-11.2"
+    name: "Hardware offloading should be reviewed"
+    description: "Certain hardware offloading can affect security features"
+    xml_path: "system/disablechecksumoffloading"
+    check_type: "exists"
+    severity: "INFO"
+    remediation: "Review hardware offloading settings in System > Settings > Miscellaneous"
+    nta_reference: "NTA Cyber Policy - System Hardening"
+
+  - id: "NTA-FW-HARD-11.3"
+    name: "System should have valid hostname"
+    description: "Firewall should have a descriptive hostname"
+    xml_path: "system/hostname"
+    check_type: "not_empty"
+    severity: "LOW"
+    remediation: "Set descriptive hostname in System > Settings > General"
+    nta_reference: "NTA Cyber Policy - Asset Management"
+
+  - id: "NTA-FW-HARD-11.4"
+    name: "Domain should be configured"
+    description: "System domain should be properly set"
+    xml_path: "system/domain"
+    check_type: "not_empty"
+    severity: "LOW"
+    remediation: "Set system domain in System > Settings > General"
+    nta_reference: "NTA Cyber Policy - Network Configuration"
+
+# =============================================================================
+# SECTION 12: TIME SYNCHRONIZATION
+# =============================================================================
+time_checks:
+
+  - id: "NTA-FW-TIME-12.1"
+    name: "NTP servers should be configured"
+    description: "Time synchronization is critical for log accuracy"
+    xml_path: "system/timeservers"
+    check_type: "not_empty"
+    severity: "HIGH"
+    remediation: "Configure NTP servers in System > Settings > General"
+    nta_reference: "NTA Cyber Byelaw 2020 - Time Synchronization"
+
+  - id: "NTA-FW-TIME-12.2"
+    name: "Timezone should be configured"
+    description: "Proper timezone ensures accurate log timestamps"
+    xml_path: "system/timezone"
+    check_type: "not_empty"
+    severity: "MEDIUM"
+    remediation: "Set appropriate timezone in System > Settings > General"
+    nta_reference: "NTA Cyber Policy - Logging Standards"
+
+# =============================================================================
+# SECTION 13: HIGH AVAILABILITY
+# =============================================================================
+ha_checks:
+
+  - id: "NTA-FW-HA-13.1"
+    name: "CARP/HA synchronization peer verification"
+    description: "HA peer verification should be enabled if HA is used"
+    xml_path: "hasync/verifypeer"
+    check_type: "evaluate_ha_config"
+    severity: "HIGH"
+    remediation: "Enable peer verification in System > High Availability"
+    nta_reference: "NTA Cyber Policy - Availability Controls"
+
+# =============================================================================
+# SECTION 14: CAPTIVE PORTAL
+# =============================================================================
+captive_portal_checks:
+
+  - id: "NTA-FW-CP-14.1"
+    name: "Captive portal zones should be reviewed"
+    description: "Captive portal configuration should be audited"
+    xml_path: "OPNsense/captiveportal/zones"
+    check_type: "evaluate_captive_portal"
+    severity: "INFO"
+    remediation: "Review captive portal configuration in Services > Captive Portal"
+    nta_reference: "NTA Cyber Policy - Guest Network Security"
+
+# =============================================================================
+# SECTION 15: TRAFFIC SHAPING
+# =============================================================================
+traffic_shaping_checks:
+
+  - id: "NTA-FW-TS-15.1"
+    name: "Traffic shaping configuration review"
+    description: "Traffic shaping rules should be documented"
+    xml_path: "OPNsense/TrafficShaper/rules"
+    check_type: "evaluate_traffic_shaping"
+    severity: "INFO"
+    remediation: "Review and document traffic shaping rules in Firewall > Shaper"
+    nta_reference: "NTA Cyber Policy - Network Management"
